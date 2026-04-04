@@ -1,0 +1,5 @@
+.assist
+.vscode
+user_data.sqlite
+Oauth2/client_secrets.json
+*.pyc
