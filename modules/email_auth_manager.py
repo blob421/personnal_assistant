@@ -1,4 +1,4 @@
-from imap_tools import MailBox, AND
+
 import os 
 from google_auth_oauthlib.flow import InstalledAppFlow
 import sqlite3
@@ -7,6 +7,7 @@ from google.oauth2.credentials import Credentials
 from google.auth.transport.requests import Request
 import json
 from datetime import datetime
+import requests
 
 file_path = os.path.dirname(__file__)
 
@@ -16,22 +17,25 @@ def init_google():
     secret_path = '../Oauth2/client_secrets.json'
     SECRETS_PATH = os.path.abspath(os.path.join(file_path, secret_path))
 
-class Email_Manager:
+class Email_Auth_Manager():
 
     def __init__(self, provider):
+        self.user_email = None
         self.access_token = None
         self.refresh_token = None
         self.token_expiry = None
+        self.imap_uri = None
 
         if provider == 'Google':
            
             init_google()
             self.provider = 'Google'
-            self.scopes = ["https://www.googleapis.com/auth/gmail.readonly"]
+            self.scopes = ["https://www.googleapis.com/auth/gmail.readonly","openid","email"]
 
             with open(SECRETS_PATH, 'r') as f:
                 json_secrets = json.load(f)["installed"]
 
+            self.imap_uri = 'imap.gmail.com'
             self.client_secret = json_secrets['client_secret']
             self.client_id = json_secrets['client_id']
             self.token_uri = json_secrets['token_uri']
@@ -77,6 +81,7 @@ class Email_Manager:
                 if all([self.access_token, self.refresh_token, self.token_expiry]):
 
                     self.save_tokens()
+                    self.user_email = self.fetch_user_email()
                 else:
                     print('Could not fetch tokens from Google , Terminating...  ')
             else: 
@@ -124,26 +129,33 @@ class Email_Manager:
 
     def token_valid(self, tokens=None):
         if not tokens:
-             tokens = self.get_tokens()
-             if not tokens:
-                 return False
+               tokens = {'token': self.access_token, 
+                         'refresh': self.refresh_token, 'expiry': self.token_expiry}
        
       
         now = datetime.now()
         expiry = datetime.fromisoformat(tokens['expiry'])
 
-        if (expiry - now).total_seconds() <= 0:
+        if (expiry - now).total_seconds() <= 300:
             self.refresh_tokens(tokens)
                 
-
         else:
             self.access_token = tokens['token']
             self.refresh_token = tokens['refresh']
             self.token_expiry = tokens['expiry']
 
-        return True
-          
+       
+       
+    def fetch_user_email(self):
+        headers = {"Authorization": f"Bearer {self.access_token}"}
+        resp = requests.get("https://www.googleapis.com/oauth2/v3/userinfo", headers=headers)
+
+        if resp.status_code == 200:
+            data = resp.json()
+            return data.get("email")
+        else:
+            print("Failed to fetch user email:", resp.text)
+            return None
     
-    
-Google_manager = Email_Manager('Google')
+
 
