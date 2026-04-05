@@ -30,12 +30,14 @@ class Email_Auth_Manager():
            
             init_google()
             self.provider = 'Google'
-            self.scopes = ["https://www.googleapis.com/auth/gmail.readonly","openid","email"]
+            self.scopes = ["https://mail.google.com/","openid",
+                           "https://www.googleapis.com/auth/userinfo.email"]
 
             with open(SECRETS_PATH, 'r') as f:
                 json_secrets = json.load(f)["installed"]
 
             self.imap_uri = 'imap.gmail.com'
+            self.imap_port = 993
             self.client_secret = json_secrets['client_secret']
             self.client_id = json_secrets['client_id']
             self.token_uri = json_secrets['token_uri']
@@ -70,7 +72,8 @@ class Email_Auth_Manager():
                 # Create the flow using the client secrets file
                 try:
                     flow = InstalledAppFlow.from_client_secrets_file(SECRETS_PATH,  self.scopes)
-                    creds = flow.run_local_server(port=0)
+                    creds = flow.run_local_server(port=0, prompt='consent', access_type='offline')
+               
                     self.access_token = creds.token
                     self.refresh_token = creds.refresh_token
                     self.token_expiry = creds.expiry.isoformat()
@@ -83,10 +86,12 @@ class Email_Auth_Manager():
                     self.save_tokens()
                     self.user_email = self.fetch_user_email()
                 else:
+        
                     print('Could not fetch tokens from Google , Terminating...  ')
             else: 
 
                 self.token_valid(tokens=db_tokens)
+                self.user_email = self.fetch_user_email()
             
 
         except Exception as e:
