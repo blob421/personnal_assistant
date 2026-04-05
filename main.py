@@ -1,5 +1,5 @@
 from modules.email_main_controller import Email_Main_Controller
-import time
+
 import asyncio
 import sqlite3
 import contextlib
@@ -7,14 +7,15 @@ from datetime import datetime
 
 CONFIRMED_PROVIDERS = ['Google']
 
-def init():
+async def init():
     global controller
     controller = Email_Main_Controller(CONFIRMED_PROVIDERS)
-    controller.connect()
+    await controller.connect()
   
-def get_messages():
-    messages = controller.get_emails('Google', 'INBOX')
+async def get_messages():
+    messages = await controller.get_emails('Google', 'INBOX')
     print(messages)
+    await asyncio.sleep(1800)
 
 def save_terms(term):
     now = datetime.now().isoformat()
@@ -50,8 +51,10 @@ def prompt_for_terms():
         save_terms(term)
 
     
+async def main():
 
-init()
-while True:
-   get_messages()
-   time.sleep(1800)
+    await init()
+    await asyncio.gather(get_messages())
+
+
+asyncio.run(main())

@@ -6,7 +6,7 @@ import contextlib
 from google.oauth2.credentials import Credentials
 from google.auth.transport.requests import Request
 import json
-from datetime import datetime
+from datetime import datetime, timezone
 import requests
 
 file_path = os.path.dirname(__file__)
@@ -138,8 +138,9 @@ class Email_Auth_Manager():
                          'refresh': self.refresh_token, 'expiry': self.token_expiry}
        
       
-        now = datetime.now()
+        now = datetime.now(timezone.utc)
         expiry = datetime.fromisoformat(tokens['expiry'])
+        expiry = expiry.replace(tzinfo=timezone.utc)
 
         if (expiry - now).total_seconds() <= 300:
             self.refresh_tokens(tokens)

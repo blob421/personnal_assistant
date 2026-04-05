@@ -1,36 +1,46 @@
 from email import message_from_bytes
+import re
+re_str = r"^\[\"[w]+W\(\]$"
+def extract_mail(raw_bytes):
+    msg = message_from_bytes(raw_bytes)
 
-def extract_mail(bytes):
     text_body = None
     html_body = None
     attachments = []
 
-    msg = message_from_bytes(bytes)
+    # Walk through MIME parts
+    for part in msg.walk():
+        ctype = part.get_content_type()
+        disp = part.get("Content-Disposition")
 
-    if msg.is_multipart():
-        for part in msg.walk():
-            content_type = part.get_content_type()
-            disposition = part.get("Content-Disposition")
+        # Only accept the FIRST clean text/plain part
+        if text_body is None and ctype == "text/plain" and disp is None:
+            payload = part.get_payload(decode=True)
+            if payload:
+                text_body = payload.decode(
+                    part.get_content_charset() or "utf-8",
+                    errors="replace"
+                )
+            continue
 
-            if content_type == "text/plain" and disposition is None:
-                text_body = (part.get_payload(decode=True).decode(part.get_content_charset() 
-                                                               or "utf-8", errors="replace"))
-                
-            elif content_type == "text/html" and disposition is None:
-                html_body = part.get_payload(decode=True).decode(part.get_content_charset() or "utf-8", errors="replace")
+        # HTML (optional)
+        if html_body is None and ctype == "text/html" and disp is None:
+            payload = part.get_payload(decode=True)
+            if payload:
+                html_body = payload.decode(
+                    part.get_content_charset() or "utf-8",
+                    errors="replace"
+                )
+            continue
 
-            # Attachments
-            elif disposition and "attachment" in disposition.lower():
-                filename = part.get_filename()
-                data = part.get_payload(decode=True)
-                attachments.append((filename, data))
+        # Attachments
+        if disp and "attachment" in disp.lower():
+            filename = part.get_filename()
+            data = part.get_payload(decode=True)
+            attachments.append((filename, data))
 
-    else:
-        # Not multipart → simple email
-        content_type = msg.get_content_type()
-        if content_type == "text/plain":
-            text_body = msg.get_payload(decode=True).decode(msg.get_content_charset() or "utf-8", errors="replace")
-        elif content_type == "text/html":
-            html_body = msg.get_payload(decode=True).decode(msg.get_content_charset() or "utf-8", errors="replace")
-
-    return {'text_body' :text_body, 'html_body': html_body, 'attachments': attachments}
+    return {
+        "text_body": text_body,
+        "html_body": html_body,
+        "attachments": attachments
+    }

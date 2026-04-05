@@ -1,14 +1,7 @@
-from email_auth_manager import Email_Auth_Manager
+from .email_auth_manager import Email_Auth_Manager
 from imap_tools import MailBox, AND
-from extract_email import extract_mail
-import imaplib
-
-
-def generate_oauth2_string(email, access_token):
-    return f"user={email}\x01auth=Bearer {access_token}\x01\x01"
-
- 
-
+from .extract_email import extract_mail
+import aioimaplib
 
 
 class Email_Main_Controller():
@@ -23,7 +16,7 @@ class Email_Main_Controller():
        for p in self.providers:
           self.auth_managers[p] = {'manager': Email_Auth_Manager(p), 'imap': None}
           
-    def connect(self):
+    async def connect(self):
        
        for provider, auth_manager in self.auth_managers.items():
             manager = auth_manager['manager']
@@ -32,35 +25,48 @@ class Email_Main_Controller():
 
                 manager.token_valid()
 
-                imap = imaplib.IMAP4_SSL(auth_manager['manager'].imap_uri)
+                imap = aioimaplib.IMAP4_SSL(manager.imap_uri, port=manager.imap_port)
+                await imap.wait_hello_from_server()
 
-                connection_string = generate_oauth2_string(manager.user_email, 
-                                                            manager.access_token)
                 
-                imap.authenticate("XOAUTH2", lambda _: connection_string)
+                result = await imap.xoauth2(manager.user_email, manager.access_token)
+
+                if not result.result == 'OK':
+                    error_message = result.lines[0].decode()
+                    print(f"Connection with box.xoauth2 failed: {error_message}")
 
                 self.auth_managers[provider]['imap'] = imap
 
             else:
                 print('Could not connect , did not get the email from the api')
     
-    def get_emails(self, provider, folder):
-       imap = self.auth_managers[provider]['imap']
-       imap.select(folder)
-       status, data = imap.search(None, "ALL") # or UNSEEN
+    async def get_emails(self, provider, folder):
+        imap = self.auth_managers[provider]['imap']
 
-       emails = []
-       for msg_id in data[0].split():
-            status, msg_data = imap.fetch(msg_id, "(RFC822)")
-            print(status)
-            raw = msg_data[0][1]
-           
+        await imap.select(folder)
+
+        result, data = await imap.search('ALL')
+        if result == 'OK' and data[0]:
+            msg_ids = data[0].split()
+        else:
+            msg_ids = []
+
+        emails = []
+        for id in msg_ids:
+                msg_data = await imap.fetch(id.decode(), "(BODY.PEEK[])")
+             
+                raw = msg_data.lines[1]
             
-            emails.append(extract_mail(raw)['text_body'])
-           # imap.store(msg_id, '+FLAGS', '\\Seen') Mark then as seen
-            if len(emails)> 1: 
-                return emails
-           
-       return emails
+                
+                emails.append(extract_mail(raw)['text_body'])
+            # imap.store(msg_id, '+FLAGS', '\\Seen') Mark then as seen
+                if len(emails)> 0: 
+
+                    await imap.logout()
+                    return emails
+                
+        await imap.logout()
+        return emails
 
 
+## DATA[0] : [b'FLAGS', b'(\\Answered', b'\\Flagged', b'\\Draft', b'\\Deleted', b'\\Seen', b'$NotPhishing', b'$Phishing)']
