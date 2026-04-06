@@ -1,5 +1,5 @@
 from .email_auth_manager import Email_Auth_Manager
-from imap_tools import MailBox, AND
+
 from .extract_email import extract_mail
 import aioimaplib
 
@@ -45,7 +45,7 @@ class Email_Main_Controller():
 
         await imap.select(folder)
 
-        result, data = await imap.search('ALL')
+        result, data = await imap.search('UNSEEN')
         if result == 'OK' and data[0]:
             msg_ids = data[0].split()
         else:

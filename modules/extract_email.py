@@ -1,6 +1,5 @@
 from email import message_from_bytes
-import re
-re_str = r"^\[\"[w]+W\(\]$"
+
 def extract_mail(raw_bytes):
     msg = message_from_bytes(raw_bytes)
 
