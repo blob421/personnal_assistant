@@ -1,8 +1,15 @@
 from email import message_from_bytes
+import re 
 
 def extract_mail(raw_bytes):
     msg = message_from_bytes(raw_bytes)
 
+    headers = dict(msg.items())
+   
+    sender_address = headers['From'].split('<')[1].replace('>', "")
+    
+    subject = headers['Subject']
+   
     text_body = None
     html_body = None
     attachments = []
@@ -37,9 +44,11 @@ def extract_mail(raw_bytes):
             filename = part.get_filename()
             data = part.get_payload(decode=True)
             attachments.append((filename, data))
-
+    print(text_body)
     return {
         "text_body": text_body,
         "html_body": html_body,
-        "attachments": attachments
+        "attachments": attachments,
+        "sender": sender_address,
+        "subject": subject 
     }

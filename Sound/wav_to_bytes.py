@@ -1,5 +1,5 @@
 import wave
-
+from sound_utilities import add_silence
 import sqlite3
 import contextlib
 import os 
@@ -35,7 +35,7 @@ def wav_to_bytes(file_name, name):
         frames = wav.readframes(wav.getnframes())
         buffer.write(frames)
         
-   save_to_db(buffer.getvalue() , name, sample_rate)
+   save_to_db(add_silence(buffer.getvalue()) , name, sample_rate)
 
 
-wav_to_bytes('sine_263Hz_1s.wav', 'Prompt sound B')
+wav_to_bytes('sine_263Hz_1s.wav', 'Prompt sound A')

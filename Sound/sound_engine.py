@@ -6,7 +6,7 @@ from datetime import datetime, timezone
 from faster_whisper import WhisperModel
 import numpy as np
 import sounddevice as sd
-import time 
+from .sound_utilities import add_silence
 
 current_dir = os.path.dirname(__file__)
 model_path = os.path.join(current_dir, "Amy", "en_US-amy-medium.onnx")
@@ -14,15 +14,12 @@ welcome_text = "Hello Gabriel, how can I help you today?"
 
 db_path = os.path.abspath(os.path.join(current_dir, '..\\user_data.sqlite'))
 
-def add_silence(pcm_bytes, seconds=0.3):
-    num_samples = int(seconds * 22050)
-    silence = b"\x00\x00" * num_samples  # 16-bit PCM silence
-    return silence + silence + pcm_bytes + silence
+
 
 
 class SoundEngine():
-    def __init__(self, init_text=None):
-        self.init_text = init_text
+    def __init__(self):
+
         self.audio_bytes = None
         self.rate = 22050
         self.text = None
@@ -31,29 +28,24 @@ class SoundEngine():
         self.prompt_rate = prompt_sound['rate']
      
         self.stt_model = WhisperModel("base", device="cpu", compute_type="int8")
-        
-        if self.init_text:
-            self.load_sound(self.init_text)
-            self.play_sound(self.audio_bytes)
+    
 
 
     def load_sound(self, table='TTS', name='text', text=None):
-        if table == 'tones':
-            idx = 1
-        else:
-            idx = 2
+
         try:
             with sqlite3.connect(db_path) as conn:
                 with contextlib.closing(conn.cursor()) as cur:
                     cur.execute(f"""SELECT * FROM {table} WHERE {name}=?""", [text])
                     sound = cur.fetchone()
-                    if idx == 1:
-                        return {'rate': sound[2], 'sound':sound[idx]}
+                    if table == 'tones':
+                        return {'rate': sound[2], 'sound':sound[1]}
                     else:
-                        self.audio_bytes = sound[idx]
+                        self.audio_bytes = sound[2]
                    
         except sqlite3.Error as e:
             print(f'Error writing soudn to db : {e}')
+
 
     def create_wav(self, text, output_path):
 
@@ -118,7 +110,6 @@ class SoundEngine():
             print(f'Error writing sound to db : {e}')
 
 
-
     def play_sound(self, prompt=False):
         if not prompt:
             if not self.audio_bytes:
@@ -130,18 +121,18 @@ class SoundEngine():
             rate = self.prompt_rate * 2
             sound = self.prompt_sound
 
-        sd.stop()
+
         pcm = np.frombuffer(bytes(sound), dtype=np.int16)
         sd.play(pcm, rate)
         sd.wait()
 
-    async def sound_to_string(self, duration=3, sample_rate = 16000):
+
+    async def sound_to_string(self, duration=5, sample_rate = 16000):
         try:
-            sd.stop()
+        
             audio = sd.rec(int(duration * sample_rate),samplerate=sample_rate,channels=1,
                                                                               dtype='int16')
             sd.wait()
-            sd.stop()
             
             pcm_bytes = audio.tobytes()
             audio = np.frombuffer(bytes(pcm_bytes), dtype=np.int16).astype(np.float32) / 32768.0
@@ -153,6 +144,5 @@ class SoundEngine():
 
 
 
-sound_string = 'Hi , what can I do for you ?'
 
 

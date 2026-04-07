@@ -57,16 +57,19 @@ class Email_Main_Controller():
              
                 raw = msg_data.lines[1]
             
+                email = extract_mail(raw)
+           
                 
-                emails.append(extract_mail(raw)['text_body'])
+                emails.append({'text': email['text_body'] , 'sender': email['sender'], 
+                                                            'subject': email['subject'] })
             # imap.store(msg_id, '+FLAGS', '\\Seen') Mark then as seen
-                if len(emails)> 0: 
+                if len(emails) > 0: 
 
                     await imap.logout()
                     return emails
                 
         await imap.logout()
-        return emails
+        return None
 
 
 ## DATA[0] : [b'FLAGS', b'(\\Answered', b'\\Flagged', b'\\Draft', b'\\Deleted', b'\\Seen', b'$NotPhishing', b'$Phishing)']
