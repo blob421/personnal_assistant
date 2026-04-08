@@ -1,5 +1,7 @@
 .assist
 .vscode
 user_data.sqlite
-Oauth2/client_secrets.json
+Oauth2
 *.pyc
+user_data.sqlite
+**/__pycache__

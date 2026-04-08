@@ -8,14 +8,10 @@ from google.auth.transport.requests import Request
 import json
 from datetime import datetime, timezone
 import requests
-
+from config import OAUTH_GOOGLE_SECRETS_PATH, DB_PATH
 file_path = os.path.dirname(__file__)
 
 
-def init_google():
-    global SECRETS_PATH
-    secret_path = '../Oauth2/client_secrets.json'
-    SECRETS_PATH = os.path.abspath(os.path.join(file_path, secret_path))
 
 class Email_Auth_Manager():
 
@@ -28,12 +24,11 @@ class Email_Auth_Manager():
 
         if provider == 'Google':
            
-            init_google()
             self.provider = 'Google'
             self.scopes = ["https://mail.google.com/","openid",
                            "https://www.googleapis.com/auth/userinfo.email"]
 
-            with open(SECRETS_PATH, 'r') as f:
+            with open(OAUTH_GOOGLE_SECRETS_PATH, 'r') as f:
                 json_secrets = json.load(f)["installed"]
 
             self.imap_uri = 'imap.gmail.com'
@@ -71,7 +66,8 @@ class Email_Auth_Manager():
             if not db_tokens:
                 # Create the flow using the client secrets file
                 try:
-                    flow = InstalledAppFlow.from_client_secrets_file(SECRETS_PATH,  self.scopes)
+                    flow = InstalledAppFlow.from_client_secrets_file(OAUTH_GOOGLE_SECRETS_PATH,  
+                                                                     self.scopes)
                     creds = flow.run_local_server(port=0, prompt='consent', access_type='offline')
                
                     self.access_token = creds.token
@@ -98,7 +94,7 @@ class Email_Auth_Manager():
             print("Authentication failed:", e)
 
     def save_tokens(self):
-        with sqlite3.connect('user_data.sqlite') as conn:
+        with sqlite3.connect(DB_PATH) as conn:
             with contextlib.closing(conn.cursor()) as cur :
                 cur.execute("""
                 CREATE TABLE IF NOT EXISTS keys(
@@ -117,7 +113,7 @@ class Email_Auth_Manager():
                 
     def get_tokens(self):
         try:
-            with sqlite3.connect('user_data.sqlite') as conn:
+            with sqlite3.connect(DB_PATH) as conn:
                 with contextlib.closing(conn.cursor()) as cur:
                     cur.execute('SELECT * FROM keys WHERE provider=?', [self.provider])
                     data = cur.fetchone()

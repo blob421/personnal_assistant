@@ -5,13 +5,13 @@ import contextlib
 import os 
 import io
 
+from config import DB_PATH
 current_dir = os.path.dirname(__file__)
-db_path = os.path.abspath(os.path.join(current_dir, '..\\user_data.sqlite'))
 
 def save_to_db(audio_bytes, name, rate):
      
     try:
-        with sqlite3.connect(db_path) as conn:
+        with sqlite3.connect(DB_PATH) as conn:
             with contextlib.closing(conn.cursor()) as cur:
                     cur.execute("""CREATE TABLE IF NOT EXISTS tones (
                                                             name TEXT UNIQUE,

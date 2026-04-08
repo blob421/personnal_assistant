@@ -1,63 +1,49 @@
-from modules.email_main_controller import Email_Main_Controller
-from bluetooth.controller import Device_Controller
-
+import ctypes
+import sys
 import asyncio
-import sqlite3
-import contextlib
-from datetime import datetime
-from Sound.sound_engine import SoundEngine
-import spacy
+from datetime import datetime, timezone, timedelta
+# Force COM into MTA mode
+ctypes.windll.ole32.CoInitializeEx(0, 0x0)
 
-DB_PATH = 'user_data.sqlite'
-CONFIRMED_PROVIDERS = ['Google']
+# Force selector loop
+if sys.platform.startswith("win"):
+    asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
+
+from controllers.email_controller.email_main_controller import Email_Main_Controller
+from controllers.bluetooth.controller import Device_Controller
+
+from controllers.Sound.sound_engine import SoundEngine
+
+
+from utility.db_calls import (load_keywords, save_terms, get_logged_events)
+from utility.functions import (are_keywords_in_messages, extract_nouns)
+from utility.exceptions import EXCEPT_NOUNS
+
+from config import DB_PATH, CONFIRMED_PROVIDERS
 
 keywords = set()
-nlp = spacy.load("en_core_web_sm")
+time_until_next_prompt=None
 
-def extract_nouns(text):
-    doc = nlp(text)
-    return [token.text for token in doc if token.pos_ in ("NOUN", "PROPN")]
-
-async def load_keywords():
-    with sqlite3.connect(DB_PATH) as conn:
-        with contextlib.closing(conn.cursor()) as cur:
-            cur.execute("""CREATE TABLE IF NOT EXISTS search_terms(date TEXT, 
-                                                                    term TEXT UNIQUE
-                                    
-                )""")
-            cur.execute("""CREATE INDEX IF NOT EXISTS term_idx on search_terms(term)""")
-            cur.execute('SELECT * FROM search_terms')
-            terms = cur.fetchall()
-            for t in terms:
-                keywords.add(t[1])
-
-
-async def are_keywords_in_messages(messages:list):
-    found = []
-     
-    for m in messages:
-        sender = m['sender']
-        text = m['text']
-       
-        subject = m['subject']
-    
-        for k in keywords:
-            if text:
-                if k.lower() in text.lower() or k.lower() in subject.lower():
-                    found.append({'keyword': k, 'sender': sender})
-            else:
-                if k.lower() in subject.lower():
-                    found.append({'keyword': k, 'sender': sender})
-                
-    return found
-        
 
 async def init():
-    global controller, sound_engine
+    global controller, sound_engine, keywords, time_until_next_prompt
+    now = datetime.now()
+    last_prompt = await get_logged_events("'Daily prompt'")
+
+    if last_prompt:
+        last_time = datetime(last_prompt[1]).fromisoformat()
+        next_round = (now - (last_time + timedelta(days=1))).total_seconds()
+ 
+        time_until_next_prompt = 5 if next_round < 0 else next_round + 5
+    
+    else: 
+        time_until_next_prompt = 5
+
+
 
     controller = Email_Main_Controller(CONFIRMED_PROVIDERS)
     sound_engine = SoundEngine()
-    await load_keywords()
+    keywords = await load_keywords()
     await controller.connect()
 
 def play_sound(string):
@@ -65,62 +51,52 @@ def play_sound(string):
     sound_engine.play_sound()
 
 async def get_messages():
+    
     while True:
         messages = await controller.get_emails('Google', 'INBOX')
       
         if messages:
-            found_keywords = await are_keywords_in_messages(messages)
+            found_keywords = await are_keywords_in_messages(messages, keywords)
             if found_keywords:
                 await announce_keyword_found(found_keywords)
         await asyncio.sleep(1800)
 
-async def save_terms(term):
-    keywords.add(term)
-    now = datetime.now().isoformat()
-
-    with sqlite3.connect('user_data.sqlite') as conn:
-        with contextlib.closing(conn.cursor()) as cur:
-            try:
-               
-                cur.execute("""INSERT OR IGNORE INTO search_terms(date, term) VALUES (?,?)""", 
-                                                                                     [now, term])
-
-            except sqlite3.Error as e:
-                print(f'Error inserting term in the database : {e}')
 
 
-EXCEPT_NOUNS = {"email", "emails", "inbox", "message", "messages", "mail", 'alert' ,
-                'keyword', 'keywords', 'noun', 'nouns', 'word', 'words', 'search', 'look', 'lookup'}
+
+
 
 
 async def prompt_for_terms():
- 
-    sound_engine.play_sound(prompt=True)
-    prompt_string = 'Should I look for a specific keyword when parsing your mail ?'
+    await asyncio.sleep(time_until_next_prompt)
+    while True:
+        sound_engine.play_sound(prompt=True)
 
-    play_sound(prompt_string)
-    await asyncio.sleep(0.05)
+        prompt_string = 'Should I look for a specific keyword when parsing your mail ?'
+        play_sound(prompt_string)
+        await asyncio.sleep(0.1)
+        answer = await sound_engine.sound_to_string()
+        if not answer or 'no' in answer.lower() or answer.lower() == '':
+            return
+        
+        cleaned_answer = answer.replace(',', '').replace('.', '').replace('!', '').replace('?', '')
+        nouns = [n for n in extract_nouns(cleaned_answer) if n.lower() not in EXCEPT_NOUNS]
+        await asyncio.sleep(2)
 
-    answer = await sound_engine.sound_to_string()
 
-    if not answer or 'no' in answer.lower() or answer.lower() == '':
-        return
-    
-    cleaned_answer = answer.replace(',', '').replace('.', '').replace('!', '').replace('?', '')
-    nouns = [n for n in extract_nouns(cleaned_answer) if n.lower() not in EXCEPT_NOUNS]
-    await asyncio.sleep(2)
-    print(nouns)
+        terms_string = "and".join(nouns)
 
-    terms_string = "and".join(nouns)
+        response_string = f"All right , I will keep an eye on {terms_string} ..."
 
-    response_string = f"All right , I will keep an eye on {terms_string} ..."
+        play_sound(response_string)
 
-    play_sound(response_string)
+        for t in nouns:
+            keywords.add(t)
+            await save_terms(t.lower())
 
-    for t in nouns:
-        await save_terms(t.lower())
+        await asyncio.sleep(3600 * 24)
 
-## Handle the case when the same keyword is found in many emails
+
 async def announce_keyword_found(keywords:dict):
     aggregated = {}
 
@@ -151,9 +127,12 @@ async def announce_keyword_found(keywords:dict):
 device_controller = Device_Controller()
 
 async def main():
-    
+    if not device_controller.address:
+        await device_controller.scan_and_save()
+        device_controller.address = device_controller.best_rssi['address']
     await init()
-    await asyncio.gather(get_messages(), device_controller.proximity_scan())
+    await asyncio.gather(get_messages(), device_controller.proximity_scan(), prompt_for_terms())
+
 
 
 asyncio.run(main())

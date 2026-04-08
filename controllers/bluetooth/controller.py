@@ -3,10 +3,9 @@ from bleak import BleakScanner, BleakClient
 import sqlite3
 import os
 import contextlib
+import traceback
 
-current_dir = os.path.dirname(__file__)
-db = '../user_data.sqlite'
-DB_PATH = os.path.abspath(os.path.join(current_dir, db))
+from config import DB_PATH
 
 class Device_Controller:
 
@@ -14,7 +13,7 @@ class Device_Controller:
         self.best_rssi = None
         self.user_is_near = True
         self.address = self.load_device()
-
+      
     def load_device(self):
         try:
             with sqlite3.connect(DB_PATH) as conn:
@@ -22,6 +21,8 @@ class Device_Controller:
                   
                     cur.execute('''SELECT * FROM devices''')
                     result = cur.fetchone()
+                    if not result:
+                        return None
                     return result[0]
 
         except sqlite3.Error as e:
@@ -34,26 +35,32 @@ class Device_Controller:
                 print('Error , no device is presently configured or could not fetch it from db')
                 return 
             
-            devices = await BleakScanner.discover(return_adv=True)
+           
             address_in_proximity = False
-            for addr, data in devices.items():
-                if addr == self.address:
-                    _, adv = data
-                    address_in_proximity = True
-                    rssi = getattr(adv, "rssi", None)
-                    if rssi <= -80:
-                        self.user_is_near = False
+            for i in range(2):
+                devices = await BleakScanner.discover(return_adv=True)
+                for addr, data in devices.items():
+                    if addr == self.address:
+                        _, adv = data
+                        address_in_proximity = True
+                        rssi = getattr(adv, "rssi", None)
+                        if rssi <= -80:
+                            self.user_is_near = False
 
             if not address_in_proximity:
+                print('Registered device not found in proximity')
                 self.user_is_near = False
-                
+
+
             await asyncio.sleep(300)
         
 
             
             
     async def scan_for_closest_device(self):
-    
+        print("About to call BleakScanner.discover()")
+        traceback.print_stack()
+        results = await BleakScanner.discover(return_adv=True)
         print("Scanning...")
         for i in range(2):
             results = await BleakScanner.discover(return_adv=True)
@@ -88,6 +95,7 @@ class Device_Controller:
         
 
     async def scan_and_save(self):
+     
         await self.scan_for_closest_device()
         self.save_device()
 
@@ -106,6 +114,4 @@ class Device_Controller:
                                                                     VALUES (?,?,?)''', [a, r ,n])
         except sqlite3.Error as e:
             print(f'Error inserting bluethooth data into devices: {e}')
- 
- 
 

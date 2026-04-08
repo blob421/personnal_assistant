@@ -8,13 +8,9 @@ import numpy as np
 import sounddevice as sd
 from .sound_utilities import add_silence
 
+from config import DB_PATH
 current_dir = os.path.dirname(__file__)
 model_path = os.path.join(current_dir, "Amy", "en_US-amy-medium.onnx")
-welcome_text = "Hello Gabriel, how can I help you today?"
-
-db_path = os.path.abspath(os.path.join(current_dir, '..\\user_data.sqlite'))
-
-
 
 
 class SoundEngine():
@@ -34,7 +30,7 @@ class SoundEngine():
     def load_sound(self, table='TTS', name='text', text=None):
 
         try:
-            with sqlite3.connect(db_path) as conn:
+            with sqlite3.connect(DB_PATH) as conn:
                 with contextlib.closing(conn.cursor()) as cur:
                     cur.execute(f"""SELECT * FROM {table} WHERE {name}=?""", [text])
                     sound = cur.fetchone()
@@ -91,7 +87,7 @@ class SoundEngine():
         now = datetime.now(timezone.utc)
         time_to_string = now.isoformat()
         try:
-            with sqlite3.connect(db_path) as conn:
+            with sqlite3.connect(DB_PATH) as conn:
                 with contextlib.closing(conn.cursor()) as cur:
                         cur.execute("""CREATE TABLE IF NOT EXISTS TTS(
                                                                 date TEXT,
