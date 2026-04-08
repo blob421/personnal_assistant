@@ -3,69 +3,120 @@ import contextlib
 from config import DB_PATH
 from datetime import datetime
 
-async def load_keywords():
-    keywords = set()
-    with sqlite3.connect(DB_PATH) as conn:
-        with contextlib.closing(conn.cursor()) as cur:
-            cur.execute("""CREATE TABLE IF NOT EXISTS search_terms(date TEXT, 
-                                                                    term TEXT UNIQUE
-                                    
+
+def with_sqlite3(fn):
+    async def wrapper(*args, **kwargs):
+        with sqlite3.connect(DB_PATH) as conn:
+            with contextlib.closing(conn.cursor()) as cur:
+                return await fn(cur, *args, **kwargs)
+    return wrapper
+
+
+@with_sqlite3
+async def init_db(cur):
+    cur.execute("""CREATE TABLE IF NOT EXISTS search_terms(date TEXT, 
+                                                            term TEXT UNIQUE
+                            
+        )""")
+    cur.execute("""CREATE INDEX IF NOT EXISTS term_idx on search_terms(term)""")
+
+
+    cur.execute("""CREATE TABLE IF NOT EXISTS events(id PRIMARY KEY,
+                                                        date TEXT,
+                                                        type VARCHAR(60)
+                                                        )""")
+    
+    cur.execute("""CREATE INDEX IF NOT EXISTS event_type_idx on events(type)""")
+
+    cur.execute("""CREATE INDEX IF NOT EXISTS event_id_idx on events(id)""")
+
+    cur.execute("""CREATE TABLE IF NOT EXISTS missed_prompts (date TEXT,
+                                                              message TEXT,
+                                                              type TEXT
                 )""")
-            cur.execute("""CREATE INDEX IF NOT EXISTS term_idx on search_terms(term)""")
-            cur.execute('SELECT * FROM search_terms')
-            terms = cur.fetchall()
-            for t in terms:
-                keywords.add(t[1])
-
-            return keywords
+    
+@with_sqlite3
+async def load_keywords(cur):
+    keywords = set()
 
 
-async def save_terms(term):
- 
+    cur.execute('SELECT * FROM search_terms')
+    terms = cur.fetchall()
+    for t in terms:
+        keywords.add(t[1])
+
+    return keywords
+
+@with_sqlite3
+async def save_terms(cur, term):
     now = datetime.now().isoformat()
 
-    with sqlite3.connect(DB_PATH) as conn:
-        with contextlib.closing(conn.cursor()) as cur:
-            try:
-               
-                cur.execute("""INSERT OR IGNORE INTO search_terms(date, term) VALUES (?,?)""", 
-                                                                                     [now, term])
+    try:
+        cur.execute("""INSERT OR IGNORE INTO search_terms(date, term) VALUES (?,?)""", 
+                                                                                [now, term])
 
-            except sqlite3.Error as e:
-                print(f'Error inserting term in the database : {e}')
+    except sqlite3.Error as e:
+        print(f'Error inserting term in the database : {e}')
 
 
-
-async def get_logged_events(col:str=None, many:int=None):
+@with_sqlite3
+async def get_logged_events(cur, col:str=None, many:int=None):
 
     col_string = f'WHERE type={col} ORDER BY id DESC' if col else "ORDER BY id DESC"
 
-    with sqlite3.connect(DB_PATH) as conn:
-        with contextlib.closing(conn.cursor()) as cur:
-            try:
-                cur.execute("""CREATE TABLE IF NOT EXISTS events(id PRIMARY KEY,
-                                                                 date TEXT,
-                                                                 type VARCHAR(60)
-                                                                    )""")
-                
-                cur.execute("""CREATE INDEX IF NOT EXISTS event_type_idx on events(type)""")
-
-                cur.execute("""CREATE INDEX IF NOT EXISTS event_id_idx on events(id)""")
-
-               
-                cur.execute(f"""SELECT * FROM events {col_string}""")
-                
-                if not many:
-               
-                    results = cur.fetchone()
-                else: 
-                    results = cur.fetchmany(many)
-                
-                if results:
-                    return results
-                
-                return None
+    try:
 
 
-            except sqlite3.Error as e:
-                print(f'Error fetching event logs from the database : {e}')
+        
+        cur.execute(f"""SELECT * FROM events {col_string}""")
+        
+        if not many:
+        
+            results = cur.fetchone()
+        else: 
+            results = cur.fetchmany(many)
+        
+        if results:
+            return results
+        
+        return None
+
+
+    except sqlite3.Error as e:
+        print(f'Error fetching event logs from the database : {e}')
+
+@with_sqlite3
+async def save_event(cur, type:str):
+    now = datetime.now().isoformat()
+
+    try:
+        cur.execute("""INSERT INTO events(date, type) VALUES (?,?)""", [now, type])
+
+    except sqlite3.Error as e:
+        print(f'Error saving event to database : {e}')
+
+
+@with_sqlite3
+async def delay_event(cur, message:str, type:str):
+    now = datetime.now().isoformat()
+    try:
+       cur.execute("""INSERT INTO missed_prompts (date, message, type) VALUES (?,?,?)""",
+                   [now, message, type])
+
+    except sqlite3.Error as e:
+        print(f'Error writing delayed event to db: {e}')
+
+    
+
+
+@with_sqlite3
+async def get_pending_events(cur):
+    missed_prompts = []
+    cur.execute("""SELECT * FROM missed_prompts""")
+
+    results = cur.fetchall()
+    if results:
+        for r in results:
+            missed_prompts.append({'date': r[0], 'message': r[1], 'type': r[2]})
+
+    return missed_prompts

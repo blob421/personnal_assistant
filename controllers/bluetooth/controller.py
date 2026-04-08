@@ -30,33 +30,30 @@ class Device_Controller:
 
 
     async def proximity_scan(self):
-        while True:
-            if not self.address:
-                print('Error , no device is presently configured or could not fetch it from db')
-                return 
-            
-           
-            address_in_proximity = False
-            for i in range(2):
-                devices = await BleakScanner.discover(return_adv=True)
-                for addr, data in devices.items():
-                    if addr == self.address:
-                        _, adv = data
-                        address_in_proximity = True
-                        rssi = getattr(adv, "rssi", None)
-                        if rssi <= -80:
-                            self.user_is_near = False
-
-            if not address_in_proximity:
-                print('Registered device not found in proximity')
-                self.user_is_near = False
-
-
-            await asyncio.sleep(300)
+     
+        if not self.address:
+            print('Error , no device is presently configured or could not fetch it from db')
+            return 
         
+        
+        address_in_proximity = False
+        for i in range(2):
+            devices = await BleakScanner.discover(return_adv=True)
+            for addr, data in devices.items():
+                if addr == self.address:
+                    _, adv = data
+                    address_in_proximity = True
+                    rssi = getattr(adv, "rssi", None)
+                    if rssi <= -80:
+                        self.user_is_near = False
 
-            
-            
+        if not address_in_proximity:
+            print('Registered device not found in proximity')
+            self.user_is_near = False
+
+
+        
+         
     async def scan_for_closest_device(self):
         print("About to call BleakScanner.discover()")
         traceback.print_stack()
