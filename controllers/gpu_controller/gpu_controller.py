@@ -1,9 +1,11 @@
 import subprocess
-import time 
+import psutil
 
-class GPU_Controller():
+
+class Ressource_Controller():
     def __init__(self):
         self.gpu_vendor = self.detect_gpu_vendor()
+        self.busy = False
         
 
     def detect_gpu_vendor(self):
@@ -34,12 +36,32 @@ class GPU_Controller():
         except Exception:
             return None
         
-    def check_gpu_load(self):
-        if self.gpu_vendor == 'nvidia':
-            return self.get_nvidia_util()
+    def check_load(self):
+        iterations = []
+        for i in range(5):
+            if self.gpu_vendor == 'nvidia':
+                iterations.append(self.get_nvidia_util())
+
+            else :
+                iterations.append(self.get_cpu_util())
+
+        mean = sum(iterations) / len(iterations)
+        if mean > 40:
+            self.busy = True
+        else:
+            self.busy = False
+       
+          
+
+    def get_cpu_util(self):
+     
+        return psutil.cpu_percent(interval=None)
 
 
-controller = GPU_Controller()
-while True:
-    print(controller.check_gpu_load())
-    time.sleep(10)
+
+
+        
+controller = Ressource_Controller()
+
+controller.check_load()
+print(controller.busy)
