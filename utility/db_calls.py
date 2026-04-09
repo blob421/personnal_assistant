@@ -8,12 +8,16 @@ def with_sqlite3(fn):
     async def wrapper(*args, **kwargs):
         with sqlite3.connect(DB_PATH) as conn:
             with contextlib.closing(conn.cursor()) as cur:
-                return await fn(cur, *args, **kwargs)
+                try:
+                    return await fn(cur, *args, **kwargs)
+                
+                except sqlite3.Error as e:
+                    print(f'{kwargs.get("err_str", "")}: {e}')
     return wrapper
 
 
 @with_sqlite3
-async def init_db(cur):
+async def init_db(cur, err_str='Error creating tables during init'):
     cur.execute("""CREATE TABLE IF NOT EXISTS search_terms(date TEXT, 
                                                             term TEXT UNIQUE
                             
@@ -51,63 +55,50 @@ async def load_keywords(cur):
     return keywords
 
 @with_sqlite3
-async def save_terms(cur, term):
+async def save_terms(cur, term, err_str='Error inserting term in the database:'):
     now = datetime.now().isoformat()
 
-    try:
-        cur.execute("""INSERT OR IGNORE INTO search_terms(date, term) VALUES (?,?)""", 
+    cur.execute("""INSERT OR IGNORE INTO search_terms(date, term) VALUES (?,?)""", 
                                                                                 [now, term])
 
-    except sqlite3.Error as e:
-        print(f'Error inserting term in the database : {e}')
+  
 
 
 @with_sqlite3
-async def get_logged_events(cur, col:str=None, many:int=None):
+async def get_logged_events(cur, col:str=None, many:int=None, 
+                            err_str='Error fetching event logs from the database:'):
 
     col_string = f'WHERE type={col} ORDER BY id DESC' if col else "ORDER BY id DESC"
-
-    try:
-
-
-        
-        cur.execute(f"""SELECT * FROM events {col_string}""")
-        
-        if not many:
-        
-            results = cur.fetchone()
-        else: 
-            results = cur.fetchmany(many)
-        
-        if results:
-            return results
-        
-        return None
-
-
-    except sqlite3.Error as e:
-        print(f'Error fetching event logs from the database : {e}')
-
-@with_sqlite3
-async def save_event(cur, type:str):
-    now = datetime.now().isoformat()
-
-    try:
-        cur.execute("""INSERT INTO events(date, type) VALUES (?,?)""", [now, type])
-
-    except sqlite3.Error as e:
-        print(f'Error saving event to database : {e}')
+   
+    cur.execute(f"""SELECT * FROM events {col_string}""")
+    
+    if not many:
+    
+        results = cur.fetchone()
+    else: 
+        results = cur.fetchmany(many)
+    
+    if results:
+        return results
+    
+    return None
 
 
 @with_sqlite3
-async def delay_event(cur, message:str, type:str):
+async def save_event(cur, type:str, err_str='Error saving event to database:'):
     now = datetime.now().isoformat()
-    try:
-       cur.execute("""INSERT INTO missed_prompts (date, message, type) VALUES (?,?,?)""",
+
+    cur.execute("""INSERT INTO events(date, type) VALUES (?,?)""", [now, type])
+
+
+
+@with_sqlite3
+async def delay_event(cur, message:str, type:str, err_str='Error writing delayed event to db:'):
+    now = datetime.now().isoformat()
+ 
+    cur.execute("""INSERT INTO missed_prompts (date, message, type) VALUES (?,?,?)""",
                    [now, message, type])
 
-    except sqlite3.Error as e:
-        print(f'Error writing delayed event to db: {e}')
 
     
 
@@ -125,27 +116,25 @@ async def get_pending_events(cur):
     return missed_prompts
 
 @with_sqlite3
-async def mark_emails_read(cur, emails:list):
+async def mark_emails_read(cur, emails:list, err_str='Error inserting read email in the database:'):
     now = datetime.now().isoformat()
-    try:
-        for e in emails:
-            subject = e['subject']
-            id = e['id']
-            cur.execute("""INSERT OR IGNORE INTO emails(date, id, subject) VALUES (?,?,?)""",
-                        [now, id, subject])
 
-    except sqlite3.Error as e:
-        print(f'Error inserting read email in the database : {e}')
+    for e in emails:
+        subject = e['subject']
+        id = e['id']
+        cur.execute("""INSERT OR IGNORE INTO emails(date, id, subject) VALUES (?,?,?)""",
+                    [now, id, subject])
+
+
 
 @with_sqlite3
-async def email_was_processed(cur, id:int):
-    try:
-        cur.execute("""SELECT * FROM emails WHERE id=?""", [id])
-        result = cur.fetchone()
-        if result:
-            return True
-        return False
+async def email_was_processed(cur, id:int, err_str='Error fetching emails in email_was_processed:'):
+    
+    cur.execute("""SELECT * FROM emails WHERE id=?""", [id])
+    result = cur.fetchone()
+    if result:
+        return True
+    return False
 
-    except sqlite3.Error as e:
-        print(f'Error fetching emails in email_was_processed: {e}')
+
 

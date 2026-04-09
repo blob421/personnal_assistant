@@ -27,15 +27,20 @@ async def init():
     await init_db()
     now = datetime.now()
     last_prompt = await get_logged_events("'Daily prompt'")
-
+    
     if last_prompt:
-        last_time = datetime.fromisoformat(last_prompt[1])
-        next_round = (now - (last_time + timedelta(days=1))).total_seconds()
+     
+        last_prompt = datetime.fromisoformat(last_prompt[1])
+        next_prompt = last_prompt + timedelta(days=1)
+        time_remaining = (next_prompt - now).total_seconds()
+     
  
-        time_until_next_prompt = 5 if next_round < 0 else next_round + 5
+        time_until_next_prompt = 5 if time_remaining < 0 else time_remaining + 5
     
     else: 
         time_until_next_prompt = 5
+    
+
     
     ressource_controller = Ressource_Controller()
     email_controller = Email_Main_Controller(CONFIRMED_PROVIDERS)
@@ -99,10 +104,11 @@ async def prompt_for_terms(near=True):
 
     terms_string = "and".join(nouns)
 
-    response_string = f"All right , I will keep an eye on {terms_string} ..."
-
-    play_sound(response_string)
-  
+    if terms_string and len(terms_string) > 1:
+        response_string = f"All right , I will keep an eye on {terms_string} ..."
+        
+        play_sound(response_string)
+    
     await save_event('Daily prompt')
 
     for t in nouns:
@@ -159,21 +165,25 @@ async def proximity_loop():
         if device_controller.user_is_near and not ressource_controller.busy:
             pending = await get_pending_events()
             if pending:
+                sound_engine.play_sound(prompt=True)
                 for o in pending:
                     if not prompt_types.get(o['type']):
                         prompt_types[o['type']] = [o['message']]
 
                 for k, v in prompt_types.items():
                     if k == 'Daily prompt':
-                        await prompt_for_terms()
+                        prompt_missed = True
                     if k == 'Keywords found':
-                        sound_engine.play_sound(prompt=True)
+                        
                         intro_string = f'Good news, I have found something in your mailbox'
                         play_sound(intro_string)
 
                         for m in v:
                             await asyncio.sleep(0.5)
                             play_sound(m)
+
+                if prompt_missed:
+                    await prompt_for_terms()
 
        
         await asyncio.sleep(300)   
@@ -203,4 +213,5 @@ async def main():
 
 mta_thread = threading.Thread(target=MTA_thread, daemon=True).start()
 asyncio.run(main())
+
 
