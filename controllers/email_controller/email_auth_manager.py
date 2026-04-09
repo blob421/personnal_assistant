@@ -60,9 +60,9 @@ class Email_Auth_Manager():
             
 
             
-    def get_google_oauth(self):
+    def get_google_oauth(self, invalid=False):
         try:
-            db_tokens = self.get_tokens()
+            db_tokens = None if invalid else self.get_tokens()
             if not db_tokens:
                 # Create the flow using the client secrets file
                 try:
@@ -91,7 +91,8 @@ class Email_Auth_Manager():
             
 
         except Exception as e:
-            print("Authentication failed:", e)
+            self.get_google_oauth(invalid=True)
+            print("Authentication failed, reloading json:", e)
 
     def save_tokens(self):
         with sqlite3.connect(DB_PATH) as conn:

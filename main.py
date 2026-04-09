@@ -1,26 +1,21 @@
 import ctypes
 import sys
 import asyncio
+import threading
 from datetime import datetime, timezone, timedelta
-# Force COM into MTA mode
-ctypes.windll.ole32.CoInitializeEx(0, 0x0)
-
-# Force selector loop
-if sys.platform.startswith("win"):
-    asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
 
 from controllers.email_controller.email_main_controller import Email_Main_Controller
 from controllers.bluetooth.controller import Device_Controller
 from controllers.Sound.sound_engine import SoundEngine
-
+from controllers.ressource_controller.controller import Ressource_Controller
 
 from utility.db_calls import (load_keywords, save_terms, get_logged_events, save_event, 
                               delay_event, get_pending_events,
                               init_db)
 from utility.functions import (are_keywords_in_messages, extract_nouns)
-from utility.exceptions import EXCEPT_NOUNS
 
-from config import DB_PATH, CONFIRMED_PROVIDERS
+from utility.exceptions import EXCEPT_NOUNS
+from config import CONFIRMED_PROVIDERS
 
 keywords = set()
 time_until_next_prompt=None
@@ -28,7 +23,7 @@ time_until_next_prompt=None
 
 
 async def init():
-    global controller, sound_engine, keywords, time_until_next_prompt
+    global email_controller, sound_engine, keywords, time_until_next_prompt, ressource_controller
     await init_db()
     now = datetime.now()
     last_prompt = await get_logged_events("'Daily prompt'")
@@ -41,19 +36,26 @@ async def init():
     
     else: 
         time_until_next_prompt = 5
-
-    controller = Email_Main_Controller(CONFIRMED_PROVIDERS)
+    
+    ressource_controller = Ressource_Controller()
+    email_controller = Email_Main_Controller(CONFIRMED_PROVIDERS)
     sound_engine = SoundEngine()
-    keywords = await asyncio.to_thread(load_keywords)  
+    keywords = await load_keywords()
     
 
 
 def proximity(fn):
     async def wrapper(*args, **kwargs):
-        if not device_controller.user_is_near:
+        if not device_controller.user_is_near or ressource_controller.busy:
             return await fn(*args, **kwargs, near=False)
         else:
-            return await fn(*args, **kwargs)
+            try:
+                sound_engine.manage_sound_apps(reduce=True)
+                return await fn(*args, **kwargs)
+                
+            finally:
+                sound_engine.manage_sound_apps(reduce=False)
+           
     return wrapper
 
 
@@ -64,8 +66,8 @@ def play_sound(string):
 async def get_messages():
     
     while True:
-        await controller.connect()
-        messages = await controller.get_emails('Google', 'INBOX')
+        await email_controller.connect()
+        messages = await email_controller.get_emails('Google', 'INBOX')
       
         if messages:
             found_keywords = await are_keywords_in_messages(messages, keywords)
@@ -79,7 +81,7 @@ async def prompt_for_terms(near=True):
     if not near:
         await delay_event(message='', type='Daily prompt')
         return
-
+    
     sound_engine.play_sound(prompt=True)
 
     prompt_string = 'Should I look for a specific keyword when parsing your mail ?'
@@ -100,6 +102,7 @@ async def prompt_for_terms(near=True):
     response_string = f"All right , I will keep an eye on {terms_string} ..."
 
     play_sound(response_string)
+  
     await save_event('Daily prompt')
 
     for t in nouns:
@@ -123,11 +126,12 @@ async def announce_keyword_found(keywords:dict, near=True):
 
     if near:
         sound_engine.play_sound(prompt=True)
+        await asyncio.sleep(0.1)
         intro_string = f'Good news, I have found something in your mailbox'
         play_sound(intro_string)
 
     for idx, (k, senders) in enumerate(aggregated.items()):
-        senders_string = 'and'.join(senders)
+        senders_string = ',      '.join(senders)
         if idx == 0:
             full_string = f'The keyword {k} was found in messages sent by {senders_string}'
         else:
@@ -136,16 +140,23 @@ async def announce_keyword_found(keywords:dict, near=True):
         if not near:
             await delay_event(message=full_string, type='Keywords found')
             return 
-        
+        if idx > 0:
+            await asyncio.sleep(1)
         play_sound(full_string)
 
 
 
 async def proximity_loop():
+    if not device_controller.address:
+        await device_controller.scan_and_save()
+        device_controller.address = device_controller.best_rssi['address']
+        
     while True:
         prompt_types = {}
         await device_controller.proximity_scan()
-        if device_controller.user_is_near:
+        await ressource_controller.check_load()
+
+        if device_controller.user_is_near and not ressource_controller.busy:
             pending = await get_pending_events()
             if pending:
                 for o in pending:
@@ -176,14 +187,20 @@ async def prompt_loop():
 
 device_controller = Device_Controller()
 
+def MTA_thread():
+    
+    if sys.platform.startswith("win"):
+        asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
+    ctypes.windll.ole32.CoInitializeEx(0, 0x0)
+
+    asyncio.run(proximity_loop())
+
 async def main():
-    if not device_controller.address:
-        await device_controller.scan_and_save()
-        device_controller.address = device_controller.best_rssi['address']
+
     await init()
-    await asyncio.gather(get_messages(), proximity_loop(), prompt_loop())
+    await asyncio.gather(get_messages(), prompt_loop())
 
 
-
+mta_thread = threading.Thread(target=MTA_thread, daemon=True).start()
 asyncio.run(main())
 

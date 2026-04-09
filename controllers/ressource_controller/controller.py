@@ -36,7 +36,7 @@ class Ressource_Controller():
         except Exception:
             return None
         
-    def check_load(self):
+    async def check_load(self):
         iterations = []
         for i in range(5):
             if self.gpu_vendor == 'nvidia':
@@ -57,11 +57,3 @@ class Ressource_Controller():
      
         return psutil.cpu_percent(interval=None)
 
-
-
-
-        
-controller = Ressource_Controller()
-
-controller.check_load()
-print(controller.busy)

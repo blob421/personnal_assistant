@@ -1,0 +1,21 @@
+add click listener , if > 2hrs , delay 
+
+gui
+
+notification ? 
+
+operating hours
+
+wake you up feature 
+
+
+--------------------------
+
+ask to open gmail 
+
+
+
+bug wrong creds when rotating keys  ???
+
+
+gui , history of voice prompts 

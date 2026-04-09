@@ -7,8 +7,9 @@ from faster_whisper import WhisperModel
 import numpy as np
 import sounddevice as sd
 from .sound_utilities import add_silence
+from pycaw.pycaw import AudioUtilities
 
-from config import DB_PATH
+from config import DB_PATH, PROCESS_NAME
 current_dir = os.path.dirname(__file__)
 model_path = os.path.join(current_dir, "Amy", "en_US-amy-medium.onnx")
 
@@ -25,8 +26,15 @@ class SoundEngine():
      
         self.stt_model = WhisperModel("base", device="cpu", compute_type="int8")
     
+    def manage_sound_apps(self, reduce=True):
+        level = 0.2 if reduce else 1.0
 
+        sessions = AudioUtilities.GetAllSessions()
+        for session in sessions:
+            if session.Process and session.Process.name().lower() != PROCESS_NAME.lower():
+                session.SimpleAudioVolume.SetMasterVolume(level, None)
 
+    
     def load_sound(self, table='TTS', name='text', text=None):
 
         try:

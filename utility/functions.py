@@ -1,4 +1,4 @@
-
+import re
 import spacy
 nlp = spacy.load("en_core_web_sm")
 
@@ -24,3 +24,17 @@ async def are_keywords_in_messages(messages:list, keywords:set):
 def extract_nouns(text):
     doc = nlp(text)
     return [token.text for token in doc if token.pos_ in ("NOUN", "PROPN")]
+
+
+
+
+def extract_gmail_msgid(msg_data):
+
+    for part in msg_data:
+        if isinstance(part, (bytes, bytearray)):
+            header = part.decode(errors='ignore')
+
+            match = re.search(r'X-GM-MSGID\s+(\d+)', header, re.IGNORECASE)
+            if match:
+                return match.group(1)
+    return None

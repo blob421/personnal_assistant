@@ -18,10 +18,13 @@ async def init_db(cur):
                                                             term TEXT UNIQUE
                             
         )""")
+    cur.execute("""CREATE TABLE IF NOT EXISTS emails(id BIGINT UNIQUE, date TEXT, subject TEXT)""")
+    cur.execute("""CREATE INDEX IF NOT EXISTS emails_id_idx on emails(id)""")
+    
     cur.execute("""CREATE INDEX IF NOT EXISTS term_idx on search_terms(term)""")
 
 
-    cur.execute("""CREATE TABLE IF NOT EXISTS events(id PRIMARY KEY,
+    cur.execute("""CREATE TABLE IF NOT EXISTS events(id INTEGER PRIMARY KEY AUTOINCREMENT,
                                                         date TEXT,
                                                         type VARCHAR(60)
                                                         )""")
@@ -120,3 +123,29 @@ async def get_pending_events(cur):
             missed_prompts.append({'date': r[0], 'message': r[1], 'type': r[2]})
 
     return missed_prompts
+
+@with_sqlite3
+async def mark_emails_read(cur, emails:list):
+    now = datetime.now().isoformat()
+    try:
+        for e in emails:
+            subject = e['subject']
+            id = e['id']
+            cur.execute("""INSERT OR IGNORE INTO emails(date, id, subject) VALUES (?,?,?)""",
+                        [now, id, subject])
+
+    except sqlite3.Error as e:
+        print(f'Error inserting read email in the database : {e}')
+
+@with_sqlite3
+async def email_was_processed(cur, id:int):
+    try:
+        cur.execute("""SELECT * FROM emails WHERE id=?""", [id])
+        result = cur.fetchone()
+        if result:
+            return True
+        return False
+
+    except sqlite3.Error as e:
+        print(f'Error fetching emails in email_was_processed: {e}')
+

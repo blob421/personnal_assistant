@@ -3,7 +3,8 @@ from .email_auth_manager import Email_Auth_Manager
 from .extract_email import extract_mail
 import aioimaplib
 
-
+from utility.db_calls import mark_emails_read, email_was_processed
+from utility.functions import extract_gmail_msgid
 class Email_Main_Controller():
     
     def __init__(self, providers):
@@ -52,23 +53,30 @@ class Email_Main_Controller():
             msg_ids = []
 
         emails = []
-        for id in msg_ids:
-                msg_data = await imap.fetch(id.decode(), "(BODY.PEEK[])")
-             
-                raw = msg_data.lines[1]
+        for i in msg_ids:
+            id = i.decode()
+        
+            _ , msg_data = await imap.fetch(id, '(X-GM-MSGID BODY.PEEK[])')
+        
+            raw = msg_data[1]
+            X_GM_ID = extract_gmail_msgid(msg_data)
+
+            if not await email_was_processed(X_GM_ID):
             
                 email = extract_mail(raw)
-           
+        
                 
                 emails.append({'text': email['text_body'] , 'sender': email['sender'], 
-                                                            'subject': email['subject'] })
-            # imap.store(msg_id, '+FLAGS', '\\Seen') Mark then as seen
-                if len(emails) > 0: 
-
-                    await imap.logout()
-                    return emails
+                                                            'subject': email['subject'], 
+                                                            'id':X_GM_ID})
                 
+                # imap.store(msg_id, '+FLAGS', '\\Seen') Mark then as seen
+
         await imap.logout()
+        if len(emails) > 0:  
+            await mark_emails_read(emails)
+            return emails
+                
         return None
 
 
