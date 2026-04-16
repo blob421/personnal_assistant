@@ -23,10 +23,11 @@ class Device_Controller:
                     result = cur.fetchone()
                     if not result:
                         return None
-                    return result[0]
+                    return {'power': result[4], 'manufacturer': result[3], 'bytes': result[5]}
 
         except sqlite3.Error as e:
             print(f'Error getting bluetooth devices: {e}')
+            return None
 
 
     async def proximity_scan(self):
@@ -40,8 +41,15 @@ class Device_Controller:
         for i in range(2):
             devices = await BleakScanner.discover(return_adv=True)
             for addr, data in devices.items():
-                if addr == self.address:
-                    _, adv = data
+      
+                _, adv = data
+                power = str(adv.tx_power)
+                for k, v in adv.manufacturer_data.items():
+                    manufacturer = int(k)
+                    encoded = str(v)
+         
+                if (encoded.startswith(self.address['bytes']) 
+                    and manufacturer == self.address['manufacturer'] and power == self.address['power']):        
                     address_in_proximity = True
                     rssi = getattr(adv, "rssi", None)
                     if rssi <= -80:
@@ -56,7 +64,7 @@ class Device_Controller:
          
     async def scan_for_closest_device(self):
         print("About to call BleakScanner.discover()")
-        traceback.print_stack()
+    
         results = await BleakScanner.discover(return_adv=True)
         print("Scanning...")
         for i in range(2):
@@ -82,11 +90,19 @@ class Device_Controller:
                     name = adv.local_name
 
                 rssi = int(str(rssi).replace('-', ""))
+                power = adv.tx_power
+                for k, v in adv.manufacturer_data.items():
+                    manufacturer = int(k)
+                    encoded = str(v)[0:6]
+            
 
+           
                 if not self.best_rssi:
-                    self.best_rssi = {'address': address, 'RSSI': rssi, 'name': name}
+                    self.best_rssi = {'address': address, 'RSSI': rssi, 'name': name, 'power': power, 'manufacturer': manufacturer
+                                      , 'bytes': encoded}
                 if rssi < self.best_rssi['RSSI']:
-                    self.best_rssi = {'address': address, 'RSSI': rssi, 'name': name}
+                    self.best_rssi = {'address': address, 'RSSI': rssi, 'name': name, 'power': power, 'manufacturer': manufacturer
+                                      , 'bytes': encoded}
 
                 print(f"address: {address}, RSSI: {rssi}, name: {name}")
         
@@ -100,15 +116,21 @@ class Device_Controller:
         a = self.best_rssi['address']
         r = self.best_rssi["RSSI"]
         n = self.best_rssi['name']
+        p = self.best_rssi['power']
+        m = self.best_rssi['manufacturer']
+        b = self.best_rssi['bytes']
         try:
             with sqlite3.connect(DB_PATH) as conn:
                 with contextlib.closing(conn.cursor()) as cur:
                     cur.execute('''CREATE TABLE IF NOT EXISTS devices(address VARCHAR(18) UNIQUE, 
                                                                         RSSI INTEGER, 
-                                                                        name VARCHAR(40))''') 
+                                                                        name VARCHAR(40),
+                                                                        manufacturer INTEGER,
+                                                                        power VARCHAR(40),
+                                                                        bytes VARCHAR(40))''') 
                     
-                    cur.execute('''INSERT OR IGNORE INTO devices(address, RSSI, name) 
-                                                                    VALUES (?,?,?)''', [a, r ,n])
+                    cur.execute('''INSERT OR IGNORE INTO devices(address, RSSI, name, manufacturer, power, bytes) 
+                                                                    VALUES (?,?,?,?,?,?)''', [a, r ,n, m, p, b])
         except sqlite3.Error as e:
             print(f'Error inserting bluethooth data into devices: {e}')
 

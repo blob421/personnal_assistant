@@ -7,16 +7,21 @@ from faster_whisper import WhisperModel
 import numpy as np
 import sounddevice as sd
 from .sound_utilities import add_silence
-from pycaw.pycaw import AudioUtilities
 
+from scipy.signal import resample
 from config import DB_PATH, PROCESS_NAME
+from pulsectl import Pulse, PulseVolumeInfo
+import sys
 current_dir = os.path.dirname(__file__)
 model_path = os.path.join(current_dir, "Amy", "en_US-amy-medium.onnx")
 
+if sys.platform.startswith("win"):
+    from pycaw.pycaw import AudioUtilities
 
 class SoundEngine():
-    def __init__(self):
-
+    def __init__(self, is_windows_os):
+        self.is_windows_os = is_windows_os
+        
         self.audio_bytes = None
         self.rate = 22050
         self.text = None
@@ -29,10 +34,20 @@ class SoundEngine():
     def manage_sound_apps(self, reduce=True):
         level = 0.2 if reduce else 1.0
 
-        sessions = AudioUtilities.GetAllSessions()
-        for session in sessions:
-            if session.Process and session.Process.name().lower() != PROCESS_NAME.lower():
-                session.SimpleAudioVolume.SetMasterVolume(level, None)
+        if self.is_windows_os:
+
+            sessions = AudioUtilities.GetAllSessions()
+            for session in sessions:
+                if session.Process and session.Process.name().lower() != PROCESS_NAME.lower():
+                    session.SimpleAudioVolume.SetMasterVolume(level, None)
+        else:
+            with Pulse('volume-example') as pulse:
+                sink_inputs = pulse.sink_input_list()
+                for el in sink_inputs:
+
+                    volume = el.volume
+                    volume.value_flat = level
+                    pulse.volume_set(el, volume)
 
     
     def load_sound(self, table='TTS', name='text', text=None):
@@ -119,6 +134,7 @@ class SoundEngine():
             if not self.audio_bytes:
                 print('load_sound or create_sound must be called before using play_sound')
                 return 
+            
             rate=self.rate
             sound = self.audio_bytes
         else:
@@ -145,6 +161,8 @@ class SoundEngine():
         
         except Exception as e:
             print(f'Error converting sound input to string : {e}')
+            return None
+
 
 
 

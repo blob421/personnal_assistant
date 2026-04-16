@@ -1,21 +1,37 @@
-add click listener , if > 2hrs , delay 
-
-gui
-
-notification ? 
-
-operating hours
-
-wake you up feature 
-
-
+Features
 --------------------------
+notification 
 
 ask to open gmail 
 
+ask to list terms and delete some 
+
+wake you up feature 
+
+gui , history of voice prompts 
 
 
+Config
+-------------------------------------
+Enable prompts in cpu or gpu intensive programs 
+
+operating hours
+
+
+Improvements 
+-------------------------------------
+add click listener , if > 2hrs , delay 
+
+distortions : 
+   device mode after listening to sound input (weird tonality)
+   When playing the first sound 
+
+Bugs 
+--------------------------------------
 bug wrong creds when rotating keys  ???
 
 
-gui , history of voice prompts 
+Tests
+----------------------------------------
+
+Switch sound device while running 

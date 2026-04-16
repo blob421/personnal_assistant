@@ -1,9 +1,9 @@
-My personnal everyday vocal assistant.
+My personnal and everyday vocal assistant.
 
 It can :
 
 - Parse mail
-- Detect proximity via blutooth
-- Delay prompts and announcements for when the user is near. 
-- Prompt for keywords
-- Announce if something was found in emails.
+- Detect proximity via bluetooth
+- Prompt for search terms.
+- Delay prompts and announcements until users are nearby.
+- Announce and send notifications if something was found while parsing mail.
