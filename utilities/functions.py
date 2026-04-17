@@ -1,5 +1,7 @@
 import re
 import spacy
+from utilities.db_calls import get_pending_events
+from collections import defaultdict
 nlp = spacy.load("en_core_web_sm")
 
 async def are_keywords_in_messages(messages:list, keywords:set):
@@ -39,4 +41,18 @@ def extract_gmail_msgid(msg_data):
                 return match.group(1)
     return None
 
+async def extract_pending_prompts():
+    prompt_types = defaultdict(list)
+    prompt_missed = False
+    pending = await get_pending_events()
+    if pending:
+               
+        for o in pending:
+            if not prompt_missed and o['type'] == 'Daily prompt':
+                prompt_missed = True
+            else:
+                prompt_types[o['type']].append([o['message']])
+
+  
+    return {'prompt_pending': prompt_missed, 'result': prompt_types}
 

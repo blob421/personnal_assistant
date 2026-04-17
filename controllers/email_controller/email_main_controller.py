@@ -3,15 +3,37 @@ from .email_auth_manager import Email_Auth_Manager
 from .extract_email import extract_mail
 import aioimaplib
 
-from utility.db_calls import mark_emails_read, email_was_processed
-from utility.functions import extract_gmail_msgid
+from utilities.db_calls import mark_emails_read, email_was_processed
+from utilities.functions import extract_gmail_msgid, are_keywords_in_messages
+import asyncio
+
 class Email_Main_Controller():
+
     
-    def __init__(self, providers):
+    def __init__(self, providers, vocal_handler, keywords):
        self.auth_managers = {}
+       self.keywords = keywords
        self.providers = providers
+       self.vocal_handler = vocal_handler
+
        self.create_auth_managers()
+    
       
+
+    async def get_messages(self):
+    
+        while True:
+            await self.connect()
+            messages = await self.get_emails('Google', 'INBOX')
+        
+            if messages:
+                found_keywords = await are_keywords_in_messages(messages, self.keywords)
+                if found_keywords:
+        
+                    await self.vocal_handler.announce_keyword_found(found_keywords)
+            await asyncio.sleep(1800)
+
+
     def create_auth_managers(self):
        
        for p in self.providers:
@@ -40,6 +62,8 @@ class Email_Main_Controller():
 
             else:
                 print('Could not connect , did not get the email from the api')
+    
+
     
     async def get_emails(self, provider, folder):
         imap = self.auth_managers[provider]['imap']

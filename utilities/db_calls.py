@@ -118,6 +118,7 @@ async def get_pending_events(cur):
 
     return missed_prompts
 
+
 @with_sqlite3
 async def mark_emails_read(cur, emails:list, err_str='Error inserting read email in the database:'):
     now = datetime.now().isoformat()

@@ -48,7 +48,7 @@ class Device_Controller:
                     manufacturer = int(k)
                     encoded = str(v)
          
-                if (encoded.startswith(self.address['bytes']) 
+                if (encoded and encoded.startswith(self.address['bytes']) 
                     and manufacturer == self.address['manufacturer'] and power == self.address['power']):        
                     address_in_proximity = True
                     rssi = getattr(adv, "rssi", None)
