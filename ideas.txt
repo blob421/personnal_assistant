@@ -29,7 +29,7 @@ distortions :
 Bugs 
 --------------------------------------
 bug wrong creds when rotating keys  ???
-
+delete missed events after playback
 
 Tests
 ----------------------------------------

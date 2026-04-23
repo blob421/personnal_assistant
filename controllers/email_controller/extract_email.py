@@ -1,12 +1,16 @@
 from email import message_from_bytes
-
+from email.utils import parseaddr
 
 def extract_mail(raw_bytes):
     msg = message_from_bytes(raw_bytes)
 
     headers = dict(msg.items())
+    try:
+        _, sender_address = parseaddr(headers['From'])
 
-    sender_address = headers['From'].split('<')[1].replace('>', "")
+    except (IndexError, AttributeError):
+        print(headers['From'])
+        sender_address = headers['From']
     
     subject = headers['Subject']
     

@@ -82,6 +82,7 @@ async def get_logged_events(cur, col:str=None, many:int=None,
         results = await cur.fetchmany(many)
     
     if results:
+        print(results)
         return results
     
     return None
@@ -115,7 +116,7 @@ async def get_pending_events(cur):
     if results:
         for r in results:
             missed_prompts.append({'date': r[0], 'message': r[1], 'type': r[2]})
-
+    await cur.execute("""DELETE FROM missed_prompts""")
     return missed_prompts
 
 

@@ -50,7 +50,7 @@ class Vocal_Handler():
             keywords_prompt_pending =  pending_prompts['prompt_pending']
             messages = pending_prompts['result']
 
-            has_messages = len(messages) > 0
+            has_messages = len(messages.keys()) > 0
 
             if has_messages:
                 self.sound_engine.play_sound(prompt=True)
@@ -63,6 +63,7 @@ class Vocal_Handler():
                             self.play_sound(m)
 
                 if not keywords_prompt_pending:
+                    await asyncio.sleep(1)
                     self.play_sound("... and that's about it , I'll be there if you need me ...")
                             
 
@@ -121,7 +122,7 @@ class Vocal_Handler():
 
     @proximity
     async def announce_keyword_found(self, keywords:dict, near=True, intro_sound=True):
-        global  notif
+        
         aggregated = {}
         for k in keywords:
             sender = k['sender']

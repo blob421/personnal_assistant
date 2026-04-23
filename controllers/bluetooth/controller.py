@@ -41,12 +41,13 @@ class Device_Controller:
         for i in range(2):
             devices = await BleakScanner.discover(return_adv=True)
             for addr, data in devices.items():
-      
+                encoded = None
                 _, adv = data
                 power = str(adv.tx_power)
                 for k, v in adv.manufacturer_data.items():
                     manufacturer = int(k)
                     encoded = str(v)
+                    break
          
                 if (encoded and encoded.startswith(self.address['bytes']) 
                     and manufacturer == self.address['manufacturer'] and power == self.address['power']):        

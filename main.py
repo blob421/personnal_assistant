@@ -1,5 +1,6 @@
 #!/usr/bin//env python3
 
+from PyQt6.QtWidgets import QApplication, QWidget
 import ctypes
 import sys
 import asyncio
@@ -90,6 +91,11 @@ async def prompt_loop():
         await asyncio.sleep(3600 * 24)     
 
 
+async def GUI_loop():
+    app = QApplication([])
+    window = QWidget()
+    window.show()
+    app.exec()
 
 
 def MTA_thread():
@@ -108,7 +114,7 @@ async def main():
     
     await init()
     mta_thread = threading.Thread(target=MTA_thread, daemon=True).start()
-    await asyncio.gather(email_controller.get_messages(), prompt_loop())
+    await asyncio.gather(email_controller.get_messages(), prompt_loop(), GUI_loop())
 
 
 

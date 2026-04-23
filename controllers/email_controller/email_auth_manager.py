@@ -4,6 +4,7 @@ from google_auth_oauthlib.flow import InstalledAppFlow
 import sqlite3
 import contextlib
 from google.oauth2.credentials import Credentials
+from google.auth.exceptions import RefreshError
 from google.auth.transport.requests import Request
 import json
 from datetime import datetime, timezone
@@ -40,16 +41,22 @@ class Email_Auth_Manager():
             self.get_google_oauth()
 
     def refresh_tokens(self, credentials):
-        payload = Credentials(
-                            None,  # no access token yet
-                            refresh_token=credentials['refresh'],
-                            token_uri=self.token_uri,
-                            client_id=self.client_id,
-                            client_secret=self.client_secret,
-                            scopes= self.scopes
-                        )
+        try:
+            payload = Credentials(
+                                None,  # no access token yet
+                                refresh_token=credentials['refresh'],
+                                token_uri=self.token_uri,
+                                client_id=self.client_id,
+                                client_secret=self.client_secret,
+                                scopes= self.scopes
+                            )
 
-        payload.refresh(Request())
+            payload.refresh(Request())
+
+        except RefreshError:
+            self.get_google_oauth(invalid=True)
+            return
+
 
         self.refresh_token = payload.refresh_token or credentials['refresh']
         self.access_token = payload.token 
