@@ -1,0 +1,25 @@
+INFO:httpx:HTTP Request: GET https://huggingface.co/api/models/Systran/faster-whisper-base/revision/main "HTTP/1.1 200 OK"
+INFO:controllers.email_controller.email_main_controller:Time: 2026-04-24T06:04:23.526104    Successfully connected to imap box
+INFO:httpx:HTTP Request: GET https://huggingface.co/api/models/Systran/faster-whisper-base/revision/main "HTTP/1.1 200 OK"
+INFO:controllers.email_controller.email_main_controller:Time: 2026-04-24T06:12:31.096667    Successfully connected to imap box
+INFO:httpx:HTTP Request: GET https://huggingface.co/api/models/Systran/faster-whisper-base/revision/main "HTTP/1.1 200 OK"
+INFO:controllers.email_controller.email_main_controller:Time: 2026-04-24T06:13:10.879673    Successfully connected to imap box
+INFO:controllers.email_controller.email_main_controller:Time: 2026-04-24T06:43:31.773026    Successfully connected to imap box
+INFO:controllers.email_controller.email_main_controller:Time: 2026-04-24T07:13:46.116975    Successfully connected to imap box
+INFO:httpx:HTTP Request: GET https://huggingface.co/api/models/Systran/faster-whisper-base/revision/main "HTTP/1.1 200 OK"
+INFO:controllers.email_controller.email_main_controller:Time: 2026-04-24T07:44:31.250784    Successfully connected to imap box
+INFO:httpx:HTTP Request: GET https://huggingface.co/api/models/Systran/faster-whisper-base/revision/main "HTTP/1.1 200 OK"
+INFO:controllers.email_controller.email_main_controller:Time : 2026-04-24T07:51:01.381845  Error connecting to imap box , retrying in 1 s
+INFO:controllers.email_controller.email_main_controller:Time: 2026-04-24T07:51:01.381845    Successfully connected to imap box
+INFO:controllers.email_controller.email_main_controller:Time: 2026-04-24T08:23:21.627530    Successfully connected to imap box
+INFO:controllers.email_controller.email_main_controller:Time: 2026-04-24T08:53:26.752166    Successfully connected to imap box
+INFO:controllers.email_controller.email_main_controller:Time: 2026-04-24T09:23:31.128795    Successfully connected to imap box
+INFO:controllers.email_controller.email_main_controller:Time: 2026-04-24T09:53:36.005065    Successfully connected to imap box
+INFO:controllers.email_controller.email_main_controller:Time: 2026-04-24T10:23:41.165678    Successfully connected to imap box
+INFO:controllers.email_controller.email_main_controller:Time: 2026-04-24T10:53:45.455465    Successfully connected to imap box
+INFO:controllers.email_controller.email_main_controller:Time: 2026-04-24T11:23:49.821588    Successfully connected to imap box
+INFO:controllers.email_controller.email_main_controller:Time: 2026-04-24T11:53:55.033495    Successfully connected to imap box
+INFO:controllers.email_controller.email_main_controller:Time: 2026-04-24T12:23:59.588346    Successfully connected to imap box
+INFO:controllers.email_controller.email_main_controller:Time: 2026-04-24T12:54:04.484768    Successfully connected to imap box
+INFO:controllers.email_controller.email_main_controller:Time: 2026-04-24T13:24:09.056438    Successfully connected to imap box
+INFO:controllers.email_controller.email_main_controller:Time: 2026-04-24T13:54:13.781787    Successfully connected to imap box

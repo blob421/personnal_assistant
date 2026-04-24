@@ -2,10 +2,16 @@ from .email_auth_manager import Email_Auth_Manager
 
 from .extract_email import extract_mail
 import aioimaplib
-
+import logging
 from utilities.db_calls import mark_emails_read, email_was_processed
 from utilities.functions import extract_gmail_msgid, are_keywords_in_messages
 import asyncio
+
+logger = logging.getLogger(__name__)
+
+logging.basicConfig(filename='./logs/email_controller.log', level=logging.INFO)
+
+from datetime import datetime
 
 class Email_Main_Controller():
 
@@ -47,18 +53,32 @@ class Email_Main_Controller():
             if manager.user_email: 
 
                 manager.token_valid()
+                now = datetime.now()
+                for n in range(4):
+                    try:
+                        imap = aioimaplib.IMAP4_SSL(manager.imap_uri, port=manager.imap_port)
+                        await imap.wait_hello_from_server()
 
-                imap = aioimaplib.IMAP4_SSL(manager.imap_uri, port=manager.imap_port)
-                await imap.wait_hello_from_server()
+                        
+                        result = await imap.xoauth2(manager.user_email, manager.access_token)
+                        break
 
-                
-                result = await imap.xoauth2(manager.user_email, manager.access_token)
+                    except TimeoutError as e:
+                        logger.info(f'Time : {now.isoformat()}  Error connecting to imap box , retrying in {1 + n} s')
+                       
+                        if n == 3:
+                            logger.warning(f'Time : {now.isoformat()}  Error connecting to imap box : {e}')
+                            return
+                        
+                        await asyncio.sleep(1 + n)
+                        continue
 
                 if not result.result == 'OK':
                     error_message = result.lines[0].decode()
                     print(f"Connection with box.xoauth2 failed: {error_message}")
 
                 self.auth_managers[provider]['imap'] = imap
+                logger.info(f'Time: {now.isoformat()}    Successfully connected to imap box')
 
             else:
                 print('Could not connect , did not get the email from the api')

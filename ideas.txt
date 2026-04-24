@@ -11,6 +11,7 @@ wake you up feature
 gui , history of voice prompts 
 
 
+
 Config
 -------------------------------------
 Enable prompts in cpu or gpu intensive programs 
@@ -26,10 +27,12 @@ distortions :
    device mode after listening to sound input (weird tonality)
    When playing the first sound 
 
+add prompt events to the events table . 
+
 Bugs 
 --------------------------------------
 bug wrong creds when rotating keys  ???
-delete missed events after playback
+
 
 Tests
 ----------------------------------------
