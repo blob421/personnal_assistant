@@ -2,7 +2,25 @@
 from config import DB_PATH
 from datetime import datetime
 import aiosqlite
+import sqlite3
+from contextlib import closing
 from config import default_options
+import config
+
+def with_sqlite3_sync(fn):
+    def wrapper(*args, **kwargs):
+        with sqlite3.connect(DB_PATH) as conn:
+            with closing(conn.cursor()) as cur:
+                try:
+                   results = fn(cur, *args, **kwargs)
+                   conn.commit()
+                   return results
+                
+                except sqlite3.Error as e:
+                    print(f'{kwargs.get("err_str", "")}: {e}')
+
+           
+    return wrapper
 
 def with_sqlite3(fn):
     async def wrapper(*args, **kwargs):
@@ -70,10 +88,10 @@ async def get_logged_events(cur, col:str=None, many:int=None,
 
 
 @with_sqlite3
-async def save_event(cur, type:str, err_str='Error saving event to database:'):
+async def save_event(cur, type:str, message, err_str='Error saving event to database:'):
     now = datetime.now().isoformat()
-
-    await cur.execute("""INSERT INTO events(date, type) VALUES (?,?)""", [now, type])
+    
+    await cur.execute("""INSERT INTO events(date, type, message) VALUES (?,?,?)""", [now, type, message])
 
 
 
@@ -138,7 +156,8 @@ async def init_db(cur, err_str='Error creating tables during init'):
 
     await cur.execute("""CREATE TABLE IF NOT EXISTS events(id INTEGER PRIMARY KEY AUTOINCREMENT,
                                                         date TEXT,
-                                                        type VARCHAR(60)
+                                                        type VARCHAR(60),
+                                                        message TEXT
                                                         )""")
     
     await cur.execute("""CREATE INDEX IF NOT EXISTS event_type_idx on events(type)""")
@@ -172,6 +191,39 @@ async def load_options(cur, err_str='Error fetching options for the GUI'):
     options_dict = {}
 
     for o in options:
-        options_dict[o[0]] = {'bool': o[1], 'value': o[2]}
+        options_dict[o[0]] = o[2] or o[1]
         
     return options_dict
+
+@with_sqlite3_sync
+def save_options(cur, err_str='Error saving options to DB'):
+    print(config.OPTIONS)
+   
+    for n, v in config.OPTIONS.items():
+        boo = None if type(v) == str else v
+        value = None if type(v) == bool else v
+
+
+        cur.execute("""UPDATE options SET bool=?, value=? WHERE name=?""",
+                                                              [boo, value, n])
+
+
+@with_sqlite3_sync
+def delete_keyword(cur, keyword, err_str='Error deleting keyword'):
+    cur.execute(f"""DELETE FROM search_terms WHERE term=? """, [keyword])
+
+
+@with_sqlite3_sync
+def add_keyword_gui(cur, term, err_str='Error inserting term in the database:'):
+    now = datetime.now().isoformat()
+
+    cur.execute("""INSERT OR IGNORE INTO search_terms(date, term) VALUES (?,?)""", 
+                                                                                [now, term])
+    
+@with_sqlite3_sync
+def get_events_gui(cur, err_str='Err fetching events from the db (gui)'):
+    cur.execute(f"""SELECT * FROM events ORDER BY id DESC LIMIT 20""")
+
+    results = cur.fetchall()
+
+    return results

@@ -1,13 +1,15 @@
 
 from PyQt6.QtCore import QTime
 from .widgets import OptionsContainer, TimeWidget, OptionBox
-
+import config
 
 class SilentMode(OptionsContainer):
     def __init__(self, style_class, label_name):
         super().__init__(style_class, label_name)
-
+        
         self.checkbox = OptionBox()
+       
+        self.checkbox.setChecked(config.OPTIONS['silent_mode'])
         self.layout.addWidget(self.checkbox)
         
 
@@ -27,5 +29,5 @@ class OperatingHours(OptionsContainer):
         self.layout.addWidget(self.time1)
         self.layout.addWidget(self.time2)
        
-        self.time1.setTime(QTime.fromString(self.settings['op_h_start']['value']))
-        self.time2.setTime(QTime.fromString(self.settings['op_h_end']['value']))
+        self.time1.setTime(QTime.fromString(self.settings['op_h_start']))
+        self.time2.setTime(QTime.fromString(self.settings['op_h_end']))

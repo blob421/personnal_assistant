@@ -43,3 +43,4 @@ class SaveButton(QPushButton):
         self.setText(name)
         self.setFixedSize(200, 100)
         self.setStyleSheet("""font-size: 30px""")
+        

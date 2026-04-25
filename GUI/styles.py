@@ -1,18 +1,6 @@
 styles = {
-    'history_list': """ background-color: black;
-                        color: white;
-                        font-size: 22px;
-                    
-                        font-weight: bold;
-                    """,
-
-    'history_title': """background-color: black;
-                        color: white;
-                           
-                        padding: 10px;
-                        font-size: 19px;
-                        font-weight: bold;
-                        """,
+   
+  
 
     'screen_title': """
                             background-color: white;
@@ -79,7 +67,95 @@ font-size: 30px;
             QCheckBox::indicator:checked {
                 background-color: lightgreen;
             }
+""", 
+
+  'history': """
+
+          Prompt_label {
+                font-size: 30px;
+                background-color: black;
+                color: white;
+                
+          }
+          
+          Prompt_history {
+                background-color: black;
+                color: white;
+                font-size: 22px;
+            
+                font-weight: bold;
+
+          }
+     
+          #prompt_unit {
+               border-bottom: 1px solid grey; background-color: black; padding-left: 20px; 
+                        
+          }
+          QLabel {
+           border-bottom: 1px solid grey; font-size: 29px;
+          }
+
+
+          #unit_type_label {
+             font-size: 24px; 
+          }
+          #unit_content_label {
+             font-size: 24px; padding-left:10px; padding-right: 10px;
+          }
+          #unit_time_label {
+            font-size: 24px
+          }
+          
 """
+
+,
+     
+       'keywords': """
+                 Prompt_label {
+                     font-size: 30px;
+                  color: white;
+                 }
+
+                 KeywordsMenu {
+              
+                border: 1px solid grey;
+                 background-color: #1f293b;
+                }
+
+                KeyWordsList {
+                 font-size: 26px;
+                  margin-top: 12px;
+                  color: white;
+                }
+                QLabel {
+                font-size: 30px;
+                }
+                QPushButton {
+                font-size: 25px;
+                }
+     
+
+""",
+      'dialogs': """
+ QInputDialog {
+        font-size: 26px;
+        min-width: 400px;
+        min-height: 300px;
+    }
+    QLabel {
+        font-size: 26px;
+    }
+    QLineEdit {
+        font-size: 24px;
+        padding: 6px;
+    }
+    QPushButton {
+        font-size: 24px;
+        padding: 6px 14px;
+    }
+
+"""
+
 
     
 }

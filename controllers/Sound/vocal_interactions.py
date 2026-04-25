@@ -5,7 +5,6 @@ from utilities.db_calls import delay_event, save_event, save_terms
 from utilities.exceptions import EXCEPT_NOUNS
 from controllers.notifications.controller import notif_controller
 from .sound_engine import SoundEngine
-
 import asyncio
 
 
@@ -20,6 +19,7 @@ class Vocal_Handler():
         self.notif_engine = notif_controller()
         self.device_controller = device_controller
         self.resource_controller=  resource_controller
+        self.window = None
 
 
     def play_sound(self, string):
@@ -94,8 +94,11 @@ class Vocal_Handler():
 
             await asyncio.sleep(0.1)
             answer = await self.sound_engine.sound_to_string()
+
             if not answer or 'no' in answer.lower() or answer.lower() == '':
-                await save_event('Daily prompt')
+                message = 'No keywords provided'
+                await save_event('Daily prompt', message)
+                self.window.worker.reload_requested.emit()
                 return
             
             cleaned_answer = answer.replace(',', '').replace('.', '').replace('!', '').replace('?', '')
@@ -107,8 +110,11 @@ class Vocal_Handler():
 
             if terms_string and len(terms_string) > 1:
                 self.play_sound(f"All right , I will keep an eye on {terms_string} ...")
-            
-            await save_event('Daily prompt')
+
+            message = f'Saved {terms_string}'
+            await save_event('Daily prompt', message)
+
+            self.window.worker.reload_requested.emit()
 
             for t in nouns:
                 self.keywords.add(t)
@@ -159,6 +165,8 @@ class Vocal_Handler():
 
             self.notif_engine.notify('Keyword found', 
                                      f'the keyword {k} was found in mails coming from {senders_string}')
+            
+            
 
             if not near or was_not_available:
                 await delay_event(message=full_string, type='Keywords found')
@@ -166,6 +174,9 @@ class Vocal_Handler():
             
             if idx > 0:
                 await asyncio.sleep(1)
+
+            await save_event('Keywords found', full_string)
+            self.window.worker.reload_requested.emit()
 
             self.play_sound(full_string)
 

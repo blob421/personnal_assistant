@@ -5,8 +5,10 @@ from GUI.styles import styles
 from PyQt6.QtCore import QTime, Qt
 from .options import SilentMode, OperatingHours
 from .widgets import SaveButton
+import config
+from utilities.db_calls import save_options
+from GUI.titles import Title
 
-    
 class Options(QWidget):
     def __init__(self, options):
         super().__init__()
@@ -19,10 +21,8 @@ class Options(QWidget):
         self.setObjectName("option_panel")
         self.setStyleSheet(styles['option_panel'])
         
-        self.title_widget = QLabel('Settings')
-        self.title_widget.setStyleSheet(styles['titles'])
-        self.title_widget.setFixedHeight(130)
-        self.title_widget.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.title_widget = Title('Settings')
+    
 
         ################################################################
         self.option_1 = OperatingHours(self.settings, 'operating_hours_cont', 'Operating Hours')
@@ -50,7 +50,7 @@ class Options(QWidget):
     
    
         save_button = SaveButton('Apply settings')
-        
+        save_button.clicked.connect(self.get_options_values)
         save_btn_cont = QWidget()
         save_cont_layout = QHBoxLayout()
         save_cont_layout.setAlignment(Qt.AlignmentFlag.AlignRight)
@@ -61,6 +61,17 @@ class Options(QWidget):
         main_layout.addWidget(self.title_widget)
         main_layout.addWidget(scroll)
         main_layout.addWidget(save_btn_cont)
+
+    def get_options_values(self):
+        config.OPTIONS['op_h_start'] = self.option_1.time1.time().toString("HH:mm")
+        config.OPTIONS['op_h_end'] = self.option_1.time2.time().toString("HH:mm")
+        config.OPTIONS['silent_mode'] = self.option2.checkbox.isChecked()
+        print('Calling save')
+        save_options()
+
+   
+
+
   
 
 

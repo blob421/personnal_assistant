@@ -3,39 +3,31 @@ from GUI.colors import Color
 from GUI.home.prompt_history import Prompt_Box
 from PyQt6.QtCore import Qt
 from GUI.styles import styles
+from GUI.home.keywords_menu import KeywordsMenu
+from GUI.titles import Title
 
 class Home(QWidget):
-    def __init__(self, window):
+    def __init__(self, window, vocal_handler):
         super().__init__()
 
         main_layout = QVBoxLayout()
         self.setLayout(main_layout)
         ############## TITLE #################
 
-        title_layout = QVBoxLayout()
+   
 
-        title_widget = title_label()
-        title_widget.setFixedHeight(70)
-
-        title_layout.addWidget(title_widget)
+        title_widget = Title('Home')
 
         ############## BELOW ################
       
 
         below_layout = QHBoxLayout()
 
-        below_layout.addWidget(Color('purple'))
+       
         
         self.prompt_history = Prompt_Box()
         below_layout.addWidget(self.prompt_history)
-   
-        main_layout.addLayout(title_layout)
+        below_layout.addWidget(KeywordsMenu(vocal_handler))
+        main_layout.addWidget(title_widget)
         main_layout.addLayout(below_layout)
 
-class title_label(QLabel):
-    def __init__(self):
-        super().__init__()
-        self.setText('Home')
-        self.setStyleSheet("background-color: white; color: black; padding: 10px;")
-        self.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.setStyleSheet(styles['screen_title'])
