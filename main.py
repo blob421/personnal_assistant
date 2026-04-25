@@ -1,6 +1,5 @@
-#!/usr/bin//env python3
+#!/usr/bin/env python3
 
-from PyQt6.QtWidgets import QApplication, QWidget
 import ctypes
 import sys
 import asyncio
@@ -16,14 +15,11 @@ from utilities.db_calls import (load_keywords, get_logged_events, init_db, load_
 
 import config
 
-from PyQt6.QtWidgets import (QApplication, QWidget, QMainWindow, 
-                             QHBoxLayout, QStackedWidget)
 
-from PyQt6.QtCore import QObject, pyqtSignal
-from GUI.left_menu import Left_Menu
+from PyQt6.QtWidgets import QApplication
 
-from GUI.home.main_screen import Home
-from GUI.options.options_screen import Options
+from GUI.main_window import MainWindow
+
 
 ########################################### INIT ################################################
 
@@ -93,8 +89,6 @@ async def proximity_loop():
        
         
 
-
-
 async def prompt_loop():
   
     await asyncio.sleep(time_until_next_prompt)
@@ -102,76 +96,6 @@ async def prompt_loop():
         await vocal_handler.prompt_for_terms()
         await asyncio.sleep(3600 * 24)     
 
-
-async def GUI_loop():
-    app = QApplication([])
-    window = QWidget()
-    window.show()
-    app.exec()
-
-
-def MTA_thread():
-    
-    if is_windows_os:
-        asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
-        ctypes.windll.ole32.CoInitializeEx(0, 0x0)
-
-    asyncio.run(proximity_loop())
-
-def agentThread():
-    asyncio.run(agentAsync())
-
-async def agentAsync():
-    await asyncio.gather(email_controller.get_messages(), prompt_loop())
-
-### Layout => Widgets
-### Layout => Layout with widgets
-
-class Worker(QObject):
-    reload_requested = pyqtSignal()
-    def __init__(self):
-        super().__init__()
-        
-        
-
-class MainWindow(QMainWindow):
-    def __init__(self, options, vocal_handler):
-        super().__init__()
-
-        ########## WINDOW ######################
-        self.setMinimumSize(1500, 800)
-        self.setWindowTitle("Assistant")
-
-        main_layout = QHBoxLayout()
-        main_layout.setSpacing(0)
-        
-        ########## SCREENS #####################
-      
-
-        
-        self.right_screen = QStackedWidget()
-        
-        self.screens = {'home': Home(self, vocal_handler), 'options': Options(options) }
-      
-        for _ ,v in self.screens.items():
-            self.right_screen.addWidget(v)
-        
-      # layout1.setContentsMargins(300,0,0,0)
-     
-        self.left_menu_widget = Left_Menu(self)
-        main_layout.addWidget(self.left_menu_widget)
-        main_layout.addWidget(self.right_screen)
-
-
-        widget = QWidget()
-        widget.setLayout(main_layout)
-
-        self.setCentralWidget(widget)
-        self.worker = Worker()
-        self.worker.reload_requested.connect(self.screens['home'].prompt_history.history_list.get_events)
-
-    def show_screen(self, screen:str):
-        self.right_screen.setCurrentWidget(self.screens[screen])
 
 
 
@@ -186,6 +110,25 @@ async def GUI_loop():
 
     window.screens['home'].prompt_history.history_list.get_events()
     app.exec()
+
+#******************* THREADS ******************************************************
+
+def MTA_thread():
+    
+    if is_windows_os:
+        asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
+        ctypes.windll.ole32.CoInitializeEx(0, 0x0)
+
+    asyncio.run(proximity_loop())
+
+def agentThread():
+    asyncio.run(agentAsync())
+
+
+#****************** MAIN **********************************************************
+
+async def agentAsync():
+    await asyncio.gather(email_controller.get_messages(), prompt_loop())
 
 
 async def main():
