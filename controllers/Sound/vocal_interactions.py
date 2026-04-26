@@ -8,6 +8,8 @@ from .sound_engine import SoundEngine
 import asyncio
 import config
 
+from datetime import datetime
+
 
 class Vocal_Handler():
 
@@ -20,17 +22,42 @@ class Vocal_Handler():
         self.device_controller = device_controller
         self.resource_controller=  resource_controller
         self.window = None
+        self.operating_hours = self.is_operating_hours()
 
 
     def play_sound(self, string):
         self.sound_engine.create_sound(string)
         self.sound_engine.play_sound()
 
+    def is_operating_hours(self):
+        current_time = datetime.now()
+        current_hour = current_time.hour
+        current_minute = current_time.minute
+
+        end_h, end_m = config.OPTIONS['op_h_end'].split(':')
+        start_h, start_m = config.OPTIONS['op_h_start'].split(':')
+
+        
+        good = current_hour > int(start_h) and current_hour < int(end_h)
+        
+        if current_hour == int(start_h) and current_minute < int(start_m):
+            self.operating_hours = False
+
+        elif current_hour == int(end_h) and current_minute > int(end_m):
+            self.operating_hours = False
+
+        else:
+            
+            self.operating_hours = good
+        print(self.operating_hours)
 
     @staticmethod
     def proximity(fn):
         async def wrapper(self, *args, **kwargs):
-            if not self.device_controller.user_is_near or self.resource_controller.busy:
+            
+            if (not self.device_controller.user_is_near or self.resource_controller.busy 
+                                                        or not self.operating_hours):
+                
                 return await fn(self, *args, **kwargs, near=False)
             else:
                 try:
@@ -45,7 +72,8 @@ class Vocal_Handler():
 
 
     async def handle_pending_events(self):
-            
+            if not self.operating_hours: return
+
             pending_prompts = await extract_pending_prompts()
             keywords_prompt_pending =  pending_prompts['prompt_pending']
             messages = pending_prompts['result']

@@ -35,7 +35,8 @@ async def init():
 
 
     await init_db()
-
+    config.OPTIONS = await load_options()
+    
     now = datetime.now()
     last_prompt = await get_logged_events("'Daily prompt'")
     
@@ -62,7 +63,7 @@ async def init():
     vocal_handler = Vocal_Handler(is_windows_os, device_controller, resource_controller, keywords)
     email_controller = Email_Main_Controller(config.CONFIRMED_PROVIDERS, vocal_handler, keywords)
 
-    config.OPTIONS = await load_options()
+    
     
     
 
@@ -80,6 +81,8 @@ async def proximity_loop():
 
         await device_controller.proximity_scan()
         await resource_controller.check_load()
+        vocal_handler.is_operating_hours()
+   
                                                       ## Will anounce in 5 minutes if prompt_active
         if device_controller.user_is_near and not resource_controller.busy and not vocal_handler.prompt_active:
             await vocal_handler.handle_pending_events()

@@ -575,3 +575,11 @@ INFO:controllers.email_controller.email_main_controller:Time: 2026-04-26T11:56:4
 INFO:controllers.email_controller.email_main_controller:Time: 2026-04-26T12:26:52.181937    Successfully connected to imap box
 INFO:httpx:HTTP Request: GET https://huggingface.co/api/models/Systran/faster-whisper-base/revision/main "HTTP/1.1 200 OK"
 INFO:controllers.email_controller.email_main_controller:Time: 2026-04-26T12:52:11.858858    Successfully connected to imap box
+INFO:controllers.email_controller.email_main_controller:Time: 2026-04-26T13:22:17.418773    Successfully connected to imap box
+INFO:httpx:HTTP Request: GET https://huggingface.co/api/models/Systran/faster-whisper-base/revision/main "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://huggingface.co/api/models/Systran/faster-whisper-base/revision/main "HTTP/1.1 200 OK"
+INFO:controllers.email_controller.email_main_controller:Time: 2026-04-26T13:35:14.382073    Successfully connected to imap box
+INFO:httpx:HTTP Request: GET https://huggingface.co/api/models/Systran/faster-whisper-base/revision/main "HTTP/1.1 200 OK"
+INFO:controllers.email_controller.email_main_controller:Time: 2026-04-26T13:58:47.890084    Successfully connected to imap box
+INFO:httpx:HTTP Request: GET https://huggingface.co/api/models/Systran/faster-whisper-base/revision/main "HTTP/1.1 200 OK"
+INFO:controllers.email_controller.email_main_controller:Time: 2026-04-26T13:59:40.520672    Successfully connected to imap box
