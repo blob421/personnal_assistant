@@ -1,6 +1,6 @@
 import re
 import spacy
-from utilities.db_calls import get_pending_events
+from utilities.db_calls import get_pending_events, save_event
 from collections import defaultdict
 nlp = spacy.load("en_core_web_sm")
 
@@ -56,3 +56,33 @@ async def extract_pending_prompts():
   
     return {'prompt_pending': prompt_missed, 'result': prompt_types}
 
+
+async def make_announcements(keywords:dict, notif_engine, GUI_link):
+    announcements = []
+    aggregated = {}
+    for k in keywords:
+        sender = k['sender']
+        keyword = k['keyword']
+
+        if not aggregated.get(keyword):
+            aggregated[keyword] = []
+
+        aggregated[keyword].append(sender)
+
+    for idx, (k, senders) in enumerate(aggregated.items()):
+            senders_string = ',      '.join(senders)
+
+            if idx == 0:
+                full_string = f'The keyword {k} was found in messages sent by {senders_string}'
+            else:
+                full_string = f', the keyword {k} was found in mails coming from {senders_string}'
+
+            notif_engine.notify('Keyword found', 
+                                     f'the keyword {k} was found in mails coming from {senders_string}')
+            
+            announcements.append(full_string)
+            await save_event('Keywords found', full_string)
+            
+    GUI_link.reload_requested.emit()
+
+    return announcements

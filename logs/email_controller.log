@@ -572,3 +572,6 @@ INFO:httpx:HTTP Request: GET https://huggingface.co/api/models/Systran/faster-wh
 INFO:httpx:HTTP Request: GET https://huggingface.co/api/models/Systran/faster-whisper-base/revision/main "HTTP/1.1 200 OK"
 INFO:httpx:HTTP Request: GET https://huggingface.co/api/models/Systran/faster-whisper-base/revision/main "HTTP/1.1 200 OK"
 INFO:controllers.email_controller.email_main_controller:Time: 2026-04-26T11:56:46.696744    Successfully connected to imap box
+INFO:controllers.email_controller.email_main_controller:Time: 2026-04-26T12:26:52.181937    Successfully connected to imap box
+INFO:httpx:HTTP Request: GET https://huggingface.co/api/models/Systran/faster-whisper-base/revision/main "HTTP/1.1 200 OK"
+INFO:controllers.email_controller.email_main_controller:Time: 2026-04-26T12:52:11.858858    Successfully connected to imap box

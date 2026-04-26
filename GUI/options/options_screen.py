@@ -3,7 +3,7 @@ from PyQt6.QtWidgets import (QWidget, QPushButton, QVBoxLayout, QLabel, QCheckBo
 
 from GUI.styles import styles
 from PyQt6.QtCore import QTime, Qt
-from .options import SilentMode, OperatingHours
+from .options import SilentMode, OperatingHours, EnableNotif
 from .widgets import SaveButton
 import config
 from utilities.db_calls import save_options
@@ -26,6 +26,7 @@ class Options(QWidget):
         ################################################################
         self.option_1 = OperatingHours(self.settings, 'operating_hours_cont', 'Operating Hours')
         self.option2 = SilentMode('options_container', 'Silent mode (pauses vocal prompts)')
+        self.o_notif = EnableNotif('options_container', 'Enable system notifications')
       
         scroll = QScrollArea()
         scroll.setWidgetResizable(True)
@@ -42,6 +43,7 @@ class Options(QWidget):
         # Add widgets to the layout
         scroll_layout.addWidget(self.option_1)
         scroll_layout.addWidget(self.option2)
+        scroll_layout.addWidget(self.o_notif)
         scroll_layout.addWidget(empty_block)
      
         
@@ -69,6 +71,7 @@ class Options(QWidget):
         config.OPTIONS['op_h_start'] = self.option_1.time1.time().toString("HH:mm")
         config.OPTIONS['op_h_end'] = self.option_1.time2.time().toString("HH:mm")
         config.OPTIONS['silent_mode'] = self.option2.checkbox.isChecked()
+        config.OPTIONS['notifications'] = self.o_notif.checkbox.isChecked()
         print('Calling save')
         save_options()
 

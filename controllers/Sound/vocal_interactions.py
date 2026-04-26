@@ -1,12 +1,12 @@
 
-from utilities.functions import extract_pending_prompts, extract_nouns
+from utilities.functions import extract_pending_prompts, extract_nouns, make_announcements
 from utilities.db_calls import delay_event, save_event, save_terms
 
 from utilities.exceptions import EXCEPT_NOUNS
 from controllers.notifications.controller import notif_controller
 from .sound_engine import SoundEngine
 import asyncio
-
+import config
 
 
 class Vocal_Handler():
@@ -73,14 +73,16 @@ class Vocal_Handler():
                 intro_sound_needed = False if has_messages else True
                 await self.prompt_for_terms(intro_sound=intro_sound_needed)
 
-
+    
 
     @proximity
     async def prompt_for_terms(self, near=True, intro_sound=True):
+       
 
-        if not self.prompted_recently:
+        if not self.prompted_recently and not config.OPTIONS['silent_mode']:
+
             if not near:
-        
+           
                 await delay_event(message='', type='Daily prompt')
                 return
             
@@ -128,16 +130,11 @@ class Vocal_Handler():
 
     @proximity
     async def announce_keyword_found(self, keywords:dict, near=True, intro_sound=True):
-        
-        aggregated = {}
-        for k in keywords:
-            sender = k['sender']
-            keyword = k['keyword']
+   
+        announcements = await make_announcements(keywords, self.notif_engine, self.window.worker)
+       
+        if config.OPTIONS['silent_mode']: return 
 
-            if not aggregated.get(keyword):
-                aggregated[keyword] = []
-
-            aggregated[keyword].append(sender)
 
         if near and not self.prompt_active:
 
@@ -145,7 +142,7 @@ class Vocal_Handler():
                 self.sound_engine.play_sound(prompt=True)
 
             await asyncio.sleep(0.1)
-         
+            
             self.play_sound(f'Good news, I have found something in your mailbox')
 
             was_not_available = False
@@ -154,30 +151,20 @@ class Vocal_Handler():
             was_not_available = True
 
 
-        for idx, (k, senders) in enumerate(aggregated.items()):
-            senders_string = ',      '.join(senders)
-
-            if idx == 0:
-                full_string = f'The keyword {k} was found in messages sent by {senders_string}'
-            else:
-                full_string = f', the keyword {k} was found in mails coming from {senders_string}'
-
-
-            self.notif_engine.notify('Keyword found', 
-                                     f'the keyword {k} was found in mails coming from {senders_string}')
-            
-            
+        for idx, a in enumerate(announcements):
 
             if not near or was_not_available:
-                await delay_event(message=full_string, type='Keywords found')
-                return 
-            
+                await delay_event(message=a, type='Keywords found')
+                continue
+        
             if idx > 0:
                 await asyncio.sleep(1)
 
-            await save_event('Keywords found', full_string)
-            self.window.worker.reload_requested.emit()
+            self.play_sound(a)
 
-            self.play_sound(full_string)
+        
+
+       
+                
 
 

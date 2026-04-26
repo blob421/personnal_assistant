@@ -177,11 +177,13 @@ async def init_db(cur, err_str='Error creating tables during init'):
     await cur.execute("""SELECT * FROM options""")
 
     options = await cur.fetchall()
-    if len(options) < 1:
-        for k, v in default_options.items():
 
+    if not options or len(options) < 1:
+        for k, v in default_options.items():
+            boo = None if type(v) == str else v
+            value = None if type(v) == bool else v
             await cur.execute("""INSERT INTO options (name, bool, value) VALUES (?,?,?)""", 
-                            [k, v['bool'], v['value']])
+                            [k, boo, value])
             
 @with_sqlite3
 async def load_options(cur, err_str='Error fetching options for the GUI'):
