@@ -17,9 +17,8 @@ class Options(QWidget):
         self.settings = options
         main_layout = QVBoxLayout()
         self.setLayout(main_layout)
-
-        self.setObjectName("option_panel")
-        self.setStyleSheet(styles['option_panel'])
+        main_layout.setContentsMargins(0,0,0,0)
+     
         
         self.title_widget = Title('Settings')
     
@@ -32,6 +31,9 @@ class Options(QWidget):
         scroll.setWidgetResizable(True)
 
         container = QWidget()
+        container.setAttribute(Qt.WidgetAttribute.WA_StyledBackground, True)
+        container.setAutoFillBackground(True)
+        container.setObjectName('options_box')
         scroll_layout = QVBoxLayout(container)
 
 
@@ -52,6 +54,7 @@ class Options(QWidget):
         save_button = SaveButton('Apply settings')
         save_button.clicked.connect(self.get_options_values)
         save_btn_cont = QWidget()
+
         save_cont_layout = QHBoxLayout()
         save_cont_layout.setAlignment(Qt.AlignmentFlag.AlignRight)
         save_btn_cont.setLayout(save_cont_layout)

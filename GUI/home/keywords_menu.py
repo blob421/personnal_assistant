@@ -17,10 +17,12 @@ class KeywordsMenu(QWidget):
         self.setStyleSheet(styles['keywords'])
         self.setAttribute(Qt.WidgetAttribute.WA_StyledBackground, True)
         self.setAutoFillBackground(True)
+        
         self.setMinimumWidth(200)
-        self.setMaximumWidth(400)
+        self.setMaximumWidth(300)
 
         self.title = Prompt_label('Keywords')
+        self.title.setFixedHeight(65)
         self.title.setStyleSheet(styles['keywords'])
         self.keywords_list = KeyWordsList(self.keywords, self)
 
@@ -70,13 +72,18 @@ class ListWidget(QWidget):
         layout = QHBoxLayout()
         self.setLayout(layout)
         self.setMinimumHeight(90)
+        self.setAttribute(Qt.WidgetAttribute.WA_StyledBackground, True)
+        self.setObjectName('list_item')
      
         label = QLabel(label_name)
+        label.setObjectName('keyword_label')
 
         x_btn = QPushButton('X')
+        x_btn.setCursor(Qt.CursorShape.PointingHandCursor)
+        x_btn.setObjectName('x_btn_keywords')
 
 
-        x_btn.setMaximumWidth(50)
+        x_btn.setFixedSize(45,45)
         x_btn.clicked.connect(lambda: self.delete_k(label_name))
 
         layout.addWidget(label)
@@ -107,7 +114,8 @@ class AddButton(QPushButton):
         self.clicked.connect(lambda: self.add_keyword())
 
         self.setStyleSheet(styles['dialogs'])
-        
+        self.setCursor(Qt.CursorShape.PointingHandCursor)
+
     def add_keyword(self):
         text, ok = QInputDialog.getText(
             self,                     # parent → centers on your window

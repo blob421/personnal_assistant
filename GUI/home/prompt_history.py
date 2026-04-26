@@ -15,19 +15,30 @@ class worker(QObject):
 class Prompt_Box(QWidget):
     def __init__(self):
         super().__init__() 
-        self.setMinimumWidth(300)
+        
      
         self.setStyleSheet(styles['history'])
+        self.setObjectName('prompt_box')
         prompt_box_layout = QVBoxLayout()
         self.setLayout(prompt_box_layout)
+        self.setAttribute(Qt.WidgetAttribute.WA_StyledBackground, True)
+        self.setAutoFillBackground(True)
+     
         
+
         prompt_label = Prompt_label('Prompt history')
+        prompt_label.setFixedHeight(65)
         self.history_list = Prompt_history()
   
 
         col_names = Prompt_Unit('Type', 'Message', 'Time', top_row=True)
         col_names.setMinimumHeight(90)
-
+        col_names.setObjectName('top_col_cont')
+        
+       
+        col_names.setAttribute(Qt.WidgetAttribute.WA_StyledBackground, True)
+        col_names.setAutoFillBackground(True)
+   
         prompt_box_layout.addWidget(prompt_label)
         prompt_box_layout.addWidget(col_names)
         prompt_box_layout.addWidget(self.history_list)
@@ -36,7 +47,7 @@ class Prompt_Box(QWidget):
 class Prompt_history(QListWidget):
     def __init__(self):
         super().__init__()
-       
+      
     
     def get_events(self):
         results = get_events_gui()
@@ -46,7 +57,7 @@ class Prompt_history(QListWidget):
             for result in results:
                 item = QListWidgetItem()
         
-                item.setSizeHint(QSize(0, 90))
+                item.setSizeHint(QSize(0, 120))
                 time = datetime.fromisoformat(result[1]).strftime("%d/%m/%Y, %H:%M")
                 widget = Prompt_Unit(result[2], result[3], time)
             
@@ -61,8 +72,8 @@ class Prompt_label(QLabel):
     def __init__(self, text):
         super().__init__()
         self.setText(text)
-        self.setStyleSheet("background-color: black; color: white; padding: 10px;")
-        self.setFixedHeight(100)
+      
+        
        
         self.setAlignment(Qt.AlignmentFlag.AlignCenter)
       
@@ -74,24 +85,33 @@ class Prompt_Unit(QWidget):
         
         layout = QHBoxLayout()
         self.setLayout(layout)
-        self.setMinimumHeight(90)
-    
-     
-
+      
+       
         type = QLabel(type)
-        type.setObjectName("unit_type_label")
-        type.setMaximumWidth(300)
-        if top_row:
-            content = QLabel(content)
-        else:
-            content= QLabel(content)
-            content.setWordWrap(True)
-        content.setObjectName('unit_content_label')
-        
-
         time = QLabel(time)
-        time.setObjectName("unit_time_label")
-        time.setMaximumWidth(300)
+        content = QLabel(content)
+        
+        time.setFixedWidth(230)
+        type.setFixedWidth(300)
+
+        if not top_row:
+          
+            type.setObjectName("unit_type_label")
+            time.setObjectName("unit_time_label")
+            content.setWordWrap(True)
+            content.setObjectName('unit_content_label')
+
+            self.setObjectName('prompt_unit')
+            self.setAttribute(Qt.WidgetAttribute.WA_StyledBackground, True)
+            self.setAutoFillBackground(True)
+        
+      
+        
+        else:
+            type.setObjectName('top_col_prompts')
+            time.setObjectName('top_col_prompts')
+            content.setObjectName('top_col_prompts')
+        
 
         layout.addWidget(type)
         layout.addWidget(content)

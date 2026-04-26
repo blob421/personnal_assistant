@@ -3,9 +3,9 @@ from PyQt6.QtWidgets import (QWidget, QMainWindow, QHBoxLayout, QStackedWidget)
 from GUI.left_menu import Left_Menu
 from GUI.home.main_screen import Home
 from GUI.options.options_screen import Options
-
-from PyQt6.QtCore import QObject, pyqtSignal
-
+from GUI.styles import styles
+from PyQt6.QtCore import QObject, pyqtSignal, Qt
+from PyQt6.QtWidgets import QSpacerItem, QSizePolicy
 ### Layout => Widgets
 ### Layout => Layout with widgets
 
@@ -21,9 +21,10 @@ class MainWindow(QMainWindow):
         ########## WINDOW ######################
         self.setMinimumSize(1500, 800)
         self.setWindowTitle("Assistant")
-
+   
         main_layout = QHBoxLayout()
-        main_layout.setSpacing(0)
+       
+      
         
         ########## SCREENS #####################
       
@@ -36,13 +37,14 @@ class MainWindow(QMainWindow):
         for _ ,v in self.screens.items():
             self.right_screen.addWidget(v)
         
-      # layout1.setContentsMargins(300,0,0,0)
+       
      
         self.left_menu_widget = Left_Menu(self)
         main_layout.addWidget(self.left_menu_widget)
+        main_layout.addSpacerItem(QSpacerItem(8, 0, QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Minimum))
         main_layout.addWidget(self.right_screen)
 
-
+        main_layout.setContentsMargins(0, 0, 0, 0)
         widget = QWidget()
         widget.setLayout(main_layout)
 

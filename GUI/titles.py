@@ -1,7 +1,8 @@
-from PyQt6.QtWidgets import (QLabel)
+from PyQt6.QtWidgets import (QLabel, QWidget, QHBoxLayout)
 
 from GUI.styles import styles
 from PyQt6.QtCore import  Qt
+
 
 
 
@@ -12,4 +13,4 @@ class Title(QLabel):
         self.setText(label_name)
         self.setStyleSheet(styles['titles'])
         self.setFixedHeight(130)
-        self.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)
