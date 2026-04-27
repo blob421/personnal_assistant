@@ -43,18 +43,14 @@ def extract_gmail_msgid(msg_data):
 
 async def extract_pending_prompts():
     prompt_types = defaultdict(list)
-    prompt_missed = False
     pending = await get_pending_events()
-    if pending:
-               
+    if pending:       
         for o in pending:
-            if not prompt_missed and o['type'] == 'Daily prompt':
-                prompt_missed = True
-            else:
-                prompt_types[o['type']].append([o['message']])
+         
+            prompt_types[o['type']].append(o['message'])
 
   
-    return {'prompt_pending': prompt_missed, 'result': prompt_types}
+    return {'result': prompt_types}
 
 
 async def make_announcements(keywords:dict, notif_engine, GUI_link):
@@ -70,7 +66,7 @@ async def make_announcements(keywords:dict, notif_engine, GUI_link):
         aggregated[keyword].append(sender)
 
     for idx, (k, senders) in enumerate(aggregated.items()):
-            senders_string = ',      '.join(senders)
+            senders_string = ', '.join(senders)
 
             if idx == 0:
                 full_string = f'The keyword {k} was found in messages sent by {senders_string}'

@@ -35,7 +35,7 @@ class Email_Main_Controller():
             if messages:
                 found_keywords = await are_keywords_in_messages(messages, self.keywords)
                 if found_keywords:
-        
+                    await self.vocal_handler.last_asked_for_keywords()
                     await self.vocal_handler.announce_keyword_found(found_keywords)
             await asyncio.sleep(1800)
 

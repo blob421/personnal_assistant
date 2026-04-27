@@ -155,6 +155,8 @@ class SoundEngine():
             sd.wait()
             
             pcm_bytes = audio.tobytes()
+            if all(b == 0 for b in pcm_bytes): return None
+
             audio = np.frombuffer(bytes(pcm_bytes), dtype=np.int16).astype(np.float32) / 32768.0
             segments, _ = self.stt_model.transcribe(audio, language="en")
             return " ".join([seg.text for seg in segments])

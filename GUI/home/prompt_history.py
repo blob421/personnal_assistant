@@ -1,6 +1,6 @@
 
 from PyQt6.QtWidgets import (QLabel, QListWidget, QWidget, QVBoxLayout, QHBoxLayout, QListWidgetItem,
-                             QTextBrowser)
+                             QTableView)
 from PyQt6.QtCore import Qt, QSize, QObject, pyqtSignal
 from utilities.db_calls import get_events_gui
 from GUI.styles import styles
@@ -47,7 +47,8 @@ class Prompt_Box(QWidget):
 class Prompt_history(QListWidget):
     def __init__(self):
         super().__init__()
-      
+        self.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOn)
+
     
     def get_events(self):
         results = get_events_gui()
@@ -56,14 +57,17 @@ class Prompt_history(QListWidget):
             self.clear()
             for result in results:
                 item = QListWidgetItem()
-        
-                item.setSizeHint(QSize(0, 120))
+             
+               
                 time = datetime.fromisoformat(result[1]).strftime("%d/%m/%Y, %H:%M")
                 widget = Prompt_Unit(result[2], result[3], time)
-            
+          
 
                 self.addItem(item)
+               
                 self.setItemWidget(item, widget)
+                item.setSizeHint(QSize(0, widget.sizeHint().height() + 45))
+                
 
 
 
@@ -90,12 +94,13 @@ class Prompt_Unit(QWidget):
         type = QLabel(type)
         time = QLabel(time)
         content = QLabel(content)
+       
         
-        time.setFixedWidth(230)
+       
         type.setFixedWidth(300)
 
         if not top_row:
-          
+            time.setFixedWidth(230)
             type.setObjectName("unit_type_label")
             time.setObjectName("unit_time_label")
             content.setWordWrap(True)
@@ -108,6 +113,7 @@ class Prompt_Unit(QWidget):
       
         
         else:
+            time.setFixedWidth(241)
             type.setObjectName('top_col_prompts')
             time.setObjectName('top_col_prompts')
             content.setObjectName('top_col_prompts')

@@ -1,6 +1,6 @@
 
 from utilities.functions import extract_pending_prompts, extract_nouns, make_announcements
-from utilities.db_calls import delay_event, save_event, save_terms
+from utilities.db_calls import delay_event, save_event, save_terms, get_logged_events
 
 from utilities.exceptions import EXCEPT_NOUNS
 from controllers.notifications.controller import notif_controller
@@ -8,7 +8,7 @@ from .sound_engine import SoundEngine
 import asyncio
 import config
 
-from datetime import datetime
+from datetime import datetime, timedelta
 
 
 class Vocal_Handler():
@@ -23,12 +23,25 @@ class Vocal_Handler():
         self.resource_controller=  resource_controller
         self.window = None
         self.operating_hours = self.is_operating_hours()
+        self.keyword_prompt_due = False
 
 
     def play_sound(self, string):
         self.sound_engine.create_sound(string)
         self.sound_engine.play_sound()
 
+    async def last_asked_for_keywords(self):
+        last = await get_logged_events(col="'Daily prompt'", limit=1)
+        if not last:
+            self.keyword_prompt_due = True
+            return 
+        
+        time = datetime.fromisoformat(last[1])
+        now = datetime.now()
+
+        if (now - time > timedelta(days=1)):
+            self.keyword_prompt_due = True
+    
     def is_operating_hours(self):
         current_time = datetime.now()
         current_hour = current_time.hour
@@ -38,7 +51,7 @@ class Vocal_Handler():
         start_h, start_m = config.OPTIONS['op_h_start'].split(':')
 
         
-        good = current_hour > int(start_h) and current_hour < int(end_h)
+        good = current_hour >= int(start_h) and current_hour <= int(end_h)
         
         if current_hour == int(start_h) and current_minute < int(start_m):
             self.operating_hours = False
@@ -75,60 +88,42 @@ class Vocal_Handler():
             if not self.operating_hours: return
 
             pending_prompts = await extract_pending_prompts()
-            keywords_prompt_pending =  pending_prompts['prompt_pending']
             messages = pending_prompts['result']
 
             has_messages = len(messages.keys()) > 0
 
             if has_messages:
                 self.sound_engine.play_sound(prompt=True)
-                self.play_sound('Hey are you there ? ... I have found something in your mailbox ...')
-                for key, value in messages.items():
+                self.play_sound('Are you there ? ... I might have found something interesting...')
+                for _ , value in messages.items():
                     await asyncio.sleep(1)
-                    self.play_sound(f'{key}:')
                     for m in value:
                             await asyncio.sleep(2)
                             self.play_sound(m)
 
-                if not keywords_prompt_pending:
+                if self.keyword_prompt_due:
                     await asyncio.sleep(1)
-                    self.play_sound("... and that's about it , I'll be there if you need me ...")
-                            
-
-            
-            if keywords_prompt_pending:
-                await asyncio.sleep(1)
-                intro_sound_needed = False if has_messages else True
-                await self.prompt_for_terms(intro_sound=intro_sound_needed)
+                    await self.prompt_for_terms()
 
     
 
-    @proximity
-    async def prompt_for_terms(self, near=True, intro_sound=True):
+
+    async def prompt_for_terms(self):
        
 
         if not self.prompted_recently and not config.OPTIONS['silent_mode']:
 
-            if not near:
-           
-                await delay_event(message='', type='Daily prompt')
-                return
             
             self.prompt_active = True
             self.prompted_recently = True
-            if intro_sound:
-                self.sound_engine.play_sound(prompt=True)
+         
 
-
-            self.play_sound('Should I look for a specific keyword when parsing your mail ?')
+            self.play_sound('Do you want me to keep an eye on something else ?')
 
             await asyncio.sleep(0.1)
             answer = await self.sound_engine.sound_to_string()
 
             if not answer or 'no' in answer.lower() or answer.lower() == '':
-                message = 'No keywords provided'
-                await save_event('Daily prompt', message)
-                self.window.worker.reload_requested.emit()
                 return
             
             cleaned_answer = answer.replace(',', '').replace('.', '').replace('!', '').replace('?', '')
@@ -151,14 +146,14 @@ class Vocal_Handler():
                 await save_terms(t.lower())
 
             self.prompt_active = False
-    
+            self.keyword_prompt_due = False
    
 
        
 
     @proximity
     async def announce_keyword_found(self, keywords:dict, near=True, intro_sound=True):
-   
+        
         announcements = await make_announcements(keywords, self.notif_engine, self.window.worker)
        
         if config.OPTIONS['silent_mode']: return 
@@ -171,7 +166,7 @@ class Vocal_Handler():
 
             await asyncio.sleep(0.1)
             
-            self.play_sound(f'Good news, I have found something in your mailbox')
+            self.play_sound(f'Are you there ? ... I might have found something interesting...')
 
             was_not_available = False
 
@@ -189,6 +184,11 @@ class Vocal_Handler():
                 await asyncio.sleep(1)
 
             self.play_sound(a)
+
+        if self.keyword_prompt_due and (near or not was_not_available):
+                await asyncio.sleep(1)
+                await self.prompt_for_terms()
+        
 
         
 

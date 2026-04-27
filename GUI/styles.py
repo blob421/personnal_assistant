@@ -96,7 +96,7 @@ font-size: 30px;
           }
 
           #top_col_prompts {
-          font-size: 24px; padding-left:2px; background-color:grey; 
+          font-size: 24px; padding-left:10px; background-color:grey; 
           }
 
           #top_col_cont {
@@ -106,23 +106,24 @@ font-size: 30px;
           
           #prompt_unit {
                border-bottom: 1px solid grey; background-color: black; font-size: 24px;
+               padding-bottom: 5px; padding-top: 5px; 
                         
           }
         
           #prompts_col_names{
-           font-size: 24px;
+           font-size: 24px; padding-left: 10px;
           }
 
           #unit_type_label {
-             font-size: 21px; background-color:#4a4a4a; padding-left:2px;
+             font-size: 23px; background-color:#4a4a4a; padding-left:2px; padding-left: 10px;
           }
           #unit_content_label {
-             font-size: 24px;  padding-left:2px; 
+             font-size: 24px;  padding-left:2px; padding-left: 10px; padding-right:10px;
              background-color:black;
           }
           #unit_time_label {
             font-size: 24px; padding-right: 10px; padding-left:2px;border-left: 1px solid grey;
-            background-color:black;
+            background-color:black; padding-left: 10px;
           }
           
 """
