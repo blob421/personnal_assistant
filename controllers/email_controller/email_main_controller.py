@@ -8,8 +8,11 @@ from utilities.functions import extract_gmail_msgid, are_keywords_in_messages
 import asyncio
 
 logger = logging.getLogger(__name__)
+import os 
+current_dir = os.path.dirname(__file__)
+log_path = os.path.abspath(os.path.join(current_dir, '../../logs/email_controller.log'))
 
-logging.basicConfig(filename='./logs/email_controller.log', level=logging.INFO)
+logging.basicConfig(filename=log_path, level=logging.INFO)
 
 from datetime import datetime
 

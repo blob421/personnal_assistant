@@ -1,5 +1,6 @@
 
-from PyQt6.QtWidgets import (QWidget, QMainWindow, QHBoxLayout, QStackedWidget)
+from PyQt6.QtWidgets import (QWidget, QMainWindow, QHBoxLayout, QStackedWidget,QSystemTrayIcon, 
+                             QMenu, QApplication)
 from GUI.left_menu import Left_Menu
 from GUI.home.main_screen import Home
 from GUI.options.options_screen import Options
@@ -8,6 +9,10 @@ from PyQt6.QtCore import QObject, pyqtSignal, Qt
 from PyQt6.QtWidgets import QSpacerItem, QSizePolicy
 ### Layout => Widgets
 ### Layout => Layout with widgets
+import os 
+icon_path = os.path.join(os.path.dirname(__file__), 'assets', 'logo.png')
+from PyQt6.QtGui import QIcon, QAction
+
 
 class Worker(QObject):
     reload_requested = pyqtSignal()
@@ -21,10 +26,28 @@ class MainWindow(QMainWindow):
         ########## WINDOW ######################
         self.setMinimumSize(1500, 800)
         self.setWindowTitle("Assistant")
+        self.setWindowIcon(QIcon(icon_path))
+    
    
         main_layout = QHBoxLayout()
-       
-      
+
+        ########## TRAY ##########################
+        self.tray = QSystemTrayIcon(QIcon(icon_path), self)
+        
+
+        self.tray.setToolTip("Assistant, left click to show menu")
+   
+        menu = QMenu(self)
+        show_action = QAction("Show", self)
+        quit_action = QAction("Quit", self)
+
+        show_action.triggered.connect(self.show_normal)
+        quit_action.triggered.connect(self.quit_app)
+
+        menu.addAction(show_action)
+        menu.addAction(quit_action)
+
+        self.tray.setContextMenu(menu)
         
         ########## SCREENS #####################
       
@@ -44,7 +67,7 @@ class MainWindow(QMainWindow):
         main_layout.addSpacerItem(QSpacerItem(8, 0, QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Minimum))
         main_layout.addWidget(self.right_screen)
 
-        main_layout.setContentsMargins(0, 0, 0, 0)
+        main_layout.setContentsMargins(0, 10, 0, 0)
         widget = QWidget()
         widget.setLayout(main_layout)
 
@@ -54,3 +77,21 @@ class MainWindow(QMainWindow):
 
     def show_screen(self, screen:str):
         self.right_screen.setCurrentWidget(self.screens[screen])
+
+    def closeEvent(self, event):
+        event.ignore()
+        self.tray.show()
+        self.hide()
+ 
+
+    def show_normal(self):
+        self.tray.hide()
+        self.show()
+        self.raise_()
+        self.activateWindow()
+
+       
+
+    def quit_app(self):
+        self.tray.hide()
+        QApplication.quit()
