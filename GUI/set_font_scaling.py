@@ -16,4 +16,4 @@ def set_scaling():
     scaling = float(config.OPTIONS['font_scaling'])
     for k, v in styles.styles.items():
 
-        styles.styles[k] = re.sub(pattern, repl, styles.styles[k])
+        styles.styles[k] = re.sub(pattern, repl, styles.styles[k], flags=re.DOTALL)

@@ -52,23 +52,51 @@ class Prompt_history(QListWidget):
     
     def get_events(self):
         results = get_events_gui()
-       
+        old = False
+ 
         if results:
             self.clear()
+
+            today_separator = QListWidgetItem()
+            self.addItem(today_separator)
+            separator1 = DaySeparatorWidget('Today')
+            self.setItemWidget(today_separator, separator1)
+            today_separator.setSizeHint(QSize(0, separator1.sizeHint().height()))
+
+            now = datetime.now()
             for result in results:
+
                 item = QListWidgetItem()
-             
-               
-                time = datetime.fromisoformat(result[1]).strftime("%d/%m/%Y, %H:%M")
-                widget = Prompt_Unit(result[2], result[3], time)
+                time = datetime.fromisoformat(result[1])
+
+                if not now.day == time.day and not old:
+                    old_separator = QListWidgetItem()
+                    separator2 = DaySeparatorWidget('Old')
+                    self.addItem(old_separator)
+                    self.setItemWidget(today_separator, separator2)
+                    old_separator.setSizeHint(QSize(0, separator2.sizeHint().height()))
+                    old = True
+
+                display_time = time.strftime("%d/%m/%Y, %H:%M")
+
+                widget = Prompt_Unit(result[2], result[3], display_time)
           
 
                 self.addItem(item)
                
                 self.setItemWidget(item, widget)
-                item.setSizeHint(QSize(0, widget.sizeHint().height() + 45))
+                item.setSizeHint(QSize(0, widget.sizeHint().height() + 85))
                 
 
+
+class DaySeparatorWidget(QLabel):
+    def __init__(self, label_name):
+        super().__init__()
+        self.setText(label_name)
+        self.setMinimumHeight(40)
+        self.setAlignment(Qt.AlignmentFlag.AlignCenter)
+      
+        self.setObjectName('prompts_separator')
 
 
 
@@ -94,17 +122,21 @@ class Prompt_Unit(QWidget):
         type = QLabel(type)
         time = QLabel(time)
         content = QLabel(content)
-       
-        
-       
-        type.setFixedWidth(300)
+     
+        type.setMinimumWidth(130)
+        type.setMaximumWidth(210)
 
         if not top_row:
-            time.setFixedWidth(230)
+            time.setMinimumWidth(150)
+            time.setMaximumWidth(230)
+         
             type.setObjectName("unit_type_label")
             time.setObjectName("unit_time_label")
             content.setWordWrap(True)
+          
             content.setObjectName('unit_content_label')
+            content.setMinimumWidth(160)
+           
 
             self.setObjectName('prompt_unit')
             self.setAttribute(Qt.WidgetAttribute.WA_StyledBackground, True)
@@ -113,12 +145,14 @@ class Prompt_Unit(QWidget):
       
         
         else:
-            time.setFixedWidth(241)
+            time.setMinimumWidth(161)
+            time.setMaximumWidth(241)
+            
             type.setObjectName('top_col_prompts')
             time.setObjectName('top_col_prompts')
             content.setObjectName('top_col_prompts')
         
 
-        layout.addWidget(type)
+        layout.addWidget(type, 3)
         layout.addWidget(content)
         layout.addWidget(time)

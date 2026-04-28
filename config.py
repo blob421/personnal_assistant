@@ -15,7 +15,8 @@ default_options = {
                    'op_h_start': '09:00',
                    'op_h_end': '21:00',
                    'silent_mode': False,
-                   'notifications': True
+                   'notifications': True,
+                   'font_scaling': '0.9'
                    }
 
 OPTIONS = {}

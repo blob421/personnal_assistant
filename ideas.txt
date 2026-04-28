@@ -1,22 +1,22 @@
 Features
 --------------------------
-notification 
 
 ask to open gmail 
 
-ask to list terms and delete some 
-
 wake you up feature 
 
-gui , history of voice prompts 
+email watch list screen with intent analysis and announcements . 2-3 tags and a list of these msgs .
+translate address -> name 
 
+define important summary of messages indicators
 
+define interests and announce news from apis 
+
+only announce good news / bad news 
 
 Config
 -------------------------------------
 Enable prompts in cpu or gpu intensive programs 
-
-operating hours
 
 
 Improvements 

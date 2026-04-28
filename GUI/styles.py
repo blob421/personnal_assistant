@@ -125,6 +125,11 @@ font-size: 30px;
             font-size: 24px; padding-right: 10px; padding-left:2px;border-left: 1px solid grey;
             background-color:black; padding-left: 10px;
           }
+
+          #prompts_separator {
+          font-size:24px; color: grey; padding-bottom:24px; border-bottom: 1px solid grey;
+          background-color: black; padding-top:10px; 
+          }
           
 """
 

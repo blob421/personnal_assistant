@@ -24,8 +24,8 @@ class MainWindow(QMainWindow):
         super().__init__()
 
         ########## WINDOW ######################
-        self.setBaseSize(1500, 800)
-        self.setMinimumSize(1000, 600)
+    
+        self.setMinimumSize(1400, 750)
         self.setWindowTitle("Assistant")
         self.setWindowIcon(QIcon(icon_path))
     
@@ -75,6 +75,7 @@ class MainWindow(QMainWindow):
         self.setCentralWidget(widget)
         self.worker = Worker()
         self.worker.reload_requested.connect(self.screens['home'].prompt_history.history_list.get_events)
+        #self.tray.show()
 
     def show_screen(self, screen:str):
         self.right_screen.setCurrentWidget(self.screens[screen])
