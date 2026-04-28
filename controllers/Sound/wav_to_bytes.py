@@ -5,9 +5,9 @@ import contextlib
 import os 
 import io
 
-from config import DB_PATH
 current_dir = os.path.dirname(__file__)
-
+path = os.path.abspath(os.path.join(current_dir, '../../user_data.sqlite' ))
+DB_PATH = path
 def save_to_db(audio_bytes, name, rate):
      
     try:
