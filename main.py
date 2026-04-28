@@ -10,7 +10,7 @@ from controllers.email_controller.email_main_controller import Email_Main_Contro
 from controllers.bluetooth.controller import Device_Controller
 from controllers.ressource_controller.controller import Ressource_Controller
 from controllers.Sound.vocal_interactions import Vocal_Handler
-
+from controllers.timer.timer import Timer
 from utilities.db_calls import (load_keywords, get_logged_events, init_db, load_options)
 
 import config
@@ -60,8 +60,8 @@ async def init():
     device_controller = Device_Controller()
 
     keywords = await load_keywords()
-
-    vocal_handler = Vocal_Handler(is_windows_os, device_controller, resource_controller, keywords)
+    timer = Timer()
+    vocal_handler = Vocal_Handler(is_windows_os, device_controller, resource_controller, keywords, timer)
     email_controller = Email_Main_Controller(config.CONFIRMED_PROVIDERS, vocal_handler, keywords)
 
     
@@ -102,8 +102,9 @@ async def GUI_loop():
 
     window = MainWindow(config.OPTIONS, vocal_handler)
     vocal_handler.window = window
+    email_controller.window = window
     window.show()
-    window.show_screen('home')
+    window.show_screen('watch list')
 
     window.screens['home'].prompt_history.history_list.get_events()
     app.exec()

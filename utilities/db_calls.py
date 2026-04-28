@@ -6,7 +6,7 @@ import sqlite3
 from contextlib import closing
 from config import default_options
 import config
-
+import json
 def with_sqlite3_sync(fn):
     def wrapper(*args, **kwargs):
         with sqlite3.connect(DB_PATH) as conn:
@@ -126,8 +126,11 @@ async def mark_emails_read(cur, emails:list, err_str='Error inserting read email
     for e in emails:
         subject = e['subject']
         id = e['id']
-        await cur.execute("""INSERT OR IGNORE INTO emails(date, id, subject) VALUES (?,?,?)""",
-                    [now, id, subject])
+        intent = e['tags']
+        sender = e['sender']
+   
+        await cur.execute("""INSERT OR IGNORE INTO emails(date, id, subject, tags , sender) VALUES (?,?,?,?,?)""",
+                    [now, id, subject, intent, sender])
 
 
 
@@ -148,8 +151,9 @@ async def init_db(cur, err_str='Error creating tables during init'):
                                                             term TEXT UNIQUE
                             
         )""")
-    await cur.execute("""CREATE TABLE IF NOT EXISTS emails(id BIGINT UNIQUE, date TEXT, subject TEXT)""")
+    await cur.execute("""CREATE TABLE IF NOT EXISTS emails(id BIGINT UNIQUE, date TEXT, subject TEXT, tags TEXT, sender TEXT)""")
     await cur.execute("""CREATE INDEX IF NOT EXISTS emails_id_idx on emails(id)""")
+    await cur.execute("""CREATE INDEX IF NOT EXISTS emails_tags_idx on emails(tags)""")
     
     await cur.execute("""CREATE INDEX IF NOT EXISTS term_idx on search_terms(term)""")
 
@@ -173,7 +177,10 @@ async def init_db(cur, err_str='Error creating tables during init'):
                                                             bool BOOLEAN , 
                                                             value VARCHAR(255)
                 )""")
-    
+    await cur.execute("""CREATE TABLE IF NOT EXISTS contacts(alias VARCHAR(30), 
+                                                             email VARCHAR(50) UNIQUE 
+                                                             )""")
+
     await cur.execute("""SELECT * FROM options""")
 
     options = await cur.fetchall()
@@ -196,6 +203,15 @@ async def load_options(cur, err_str='Error fetching options for the GUI'):
         options_dict[o[0]] = o[2] or o[1]
         
     return options_dict
+
+@with_sqlite3
+async def load_contacts_async(cur, err_str='Error loading contacts from the database'):
+    await cur.execute("""SELECT * FROM contacts""")
+    contacts = await cur.fetchall()
+    if contacts:
+        return [c[1] for c in contacts]
+    return None
+
 
 @with_sqlite3_sync
 def save_options(cur, err_str='Error saving options to DB'):
@@ -229,3 +245,31 @@ def get_events_gui(cur, err_str='Err fetching events from the db (gui)'):
     results = cur.fetchall()
 
     return results
+
+@with_sqlite3_sync
+def add_contact(cur,  contact:dict, err_str='Error adding contact to the database'):
+    cur.execute("""INSERT OR IGNORE INTO contacts VALUES(?,?)""", [contact['alias'], contact['email']])
+
+@with_sqlite3_sync
+def load_contacts(cur, err_str='Error loading contacts from the database'):
+    cur.execute("""SELECT * FROM contacts""")
+    contacts = cur.fetchall()
+    if contacts:
+        return [{'alias': c[0], 'email': c[1]} for c in contacts]
+    return None
+
+@with_sqlite3_sync
+def delete_contact(cur, name, err_str='Error deleting contacts from the database'):
+    cur.execute("""DELETE FROM contacts WHERE alias=?""", [name])
+
+@with_sqlite3_sync
+def get_watchlist_messages(cur, err_str='Error fetching messages from db for watchlist'):
+    emails = []
+    cur.execute("""SELECT * FROM emails WHERE tags IS NOT NULL ORDER BY id DESC LIMIT 30""")
+    results = cur.fetchall()
+    for r in results:
+        emails.append({'date': r[1], 'subject': r[2], 'tags': json.loads(r[3]), 'sender': r[4]})
+    
+    if emails:
+       return emails
+    return None

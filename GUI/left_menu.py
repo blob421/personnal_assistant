@@ -52,6 +52,9 @@ class Left_Menu(QWidget):
         home_btn = ButtonContainer('home', self.main)
         left_menu.addWidget(home_btn)
 
+        contacts = ButtonContainer('watch list', self.main)
+        left_menu.addWidget(contacts)
+
         left_menu.addStretch(1)
 
         options_button = ButtonContainer('options', self.main)

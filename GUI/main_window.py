@@ -2,6 +2,7 @@
 from PyQt6.QtWidgets import (QWidget, QMainWindow, QHBoxLayout, QStackedWidget,QSystemTrayIcon, 
                              QMenu, QApplication)
 from GUI.left_menu import Left_Menu
+from GUI.contacts.contact_screen import ContactScreen
 from GUI.home.main_screen import Home
 from GUI.options.options_screen import Options
 from GUI.styles import styles
@@ -18,7 +19,13 @@ class Worker(QObject):
     reload_requested = pyqtSignal()
     def __init__(self):
         super().__init__()
-        
+
+class Watchlist_Worker(QObject):
+    reload_requested = pyqtSignal()
+    def __init__(self):
+        super().__init__()
+
+
 class MainWindow(QMainWindow):
     def __init__(self, options, vocal_handler):
         super().__init__()
@@ -56,7 +63,7 @@ class MainWindow(QMainWindow):
         
         self.right_screen = QStackedWidget()
         
-        self.screens = {'home': Home(self, vocal_handler), 'options': Options(options) }
+        self.screens = {'home': Home(self, vocal_handler), 'options': Options(options), 'watch list': ContactScreen() }
       
         for _ ,v in self.screens.items():
             self.right_screen.addWidget(v)
@@ -75,7 +82,9 @@ class MainWindow(QMainWindow):
         self.setCentralWidget(widget)
         self.worker = Worker()
         self.worker.reload_requested.connect(self.screens['home'].prompt_history.history_list.get_events)
-        #self.tray.show()
+        self.watchlist_worker = Watchlist_Worker()
+        self.watchlist_worker.reload_requested.connect(self.screens['watch list'].below.left_cont.bottom.load_messages)
+        self.tray.show()
 
     def show_screen(self, screen:str):
         self.right_screen.setCurrentWidget(self.screens[screen])

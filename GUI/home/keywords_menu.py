@@ -23,7 +23,7 @@ class KeywordsMenu(QWidget):
 
         self.title = Prompt_label('Keywords')
         self.title.setFixedHeight(65)
-        self.title.setStyleSheet(styles['keywords'])
+     
         self.keywords_list = KeyWordsList(self.keywords, self)
 
         add_button = AddButton('Add +', self)

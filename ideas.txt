@@ -14,6 +14,8 @@ define interests and announce news from apis
 
 only announce good news / bad news 
 
+add font scaling slider or input in options 
+
 Config
 -------------------------------------
 Enable prompts in cpu or gpu intensive programs 
@@ -36,5 +38,5 @@ bug wrong creds when rotating keys  ???
 
 Tests
 ----------------------------------------
-
+test watch list signal 
 Switch sound device while running 

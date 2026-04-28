@@ -3,8 +3,9 @@ from .email_auth_manager import Email_Auth_Manager
 from .extract_email import extract_mail
 import aioimaplib
 import logging
-from utilities.db_calls import mark_emails_read, email_was_processed
+from utilities.db_calls import mark_emails_read, email_was_processed, load_contacts_async
 from utilities.functions import extract_gmail_msgid, are_keywords_in_messages
+from controllers.email_controller.get_intent import get_intent
 import asyncio
 
 logger = logging.getLogger(__name__)
@@ -24,8 +25,9 @@ class Email_Main_Controller():
        self.keywords = keywords
        self.providers = providers
        self.vocal_handler = vocal_handler
-
+       self.watchlist = None
        self.create_auth_managers()
+       self.window = None
     
       
 
@@ -120,8 +122,14 @@ class Email_Main_Controller():
                 # imap.store(msg_id, '+FLAGS', '\\Seen') Mark then as seen
 
         await imap.logout()
-        if len(emails) > 0:  
-            await mark_emails_read(emails)
+        if len(emails) > 0:
+            self.watchlist = await load_contacts_async()
+            intent_emails, need_reload = await get_intent(emails, self)
+            await mark_emails_read(intent_emails)
+            
+            if need_reload:
+                self.window.watchlist_worker.reload_requested
+
             return emails
                 
         return None

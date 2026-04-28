@@ -2,6 +2,7 @@
 from utilities.functions import extract_pending_prompts, extract_nouns, make_announcements
 from utilities.db_calls import delay_event, save_event, save_terms, get_logged_events
 
+
 from utilities.exceptions import EXCEPT_NOUNS
 from controllers.notifications.controller import notif_controller
 from .sound_engine import SoundEngine
@@ -13,12 +14,13 @@ from datetime import datetime, timedelta
 
 class Vocal_Handler():
 
-    def __init__(self, is_windows_os, device_controller, resource_controller, keywords):
+    def __init__(self, is_windows_os, device_controller, resource_controller, keywords, timer):
         self.sound_engine = SoundEngine(is_windows_os)
         self.prompt_active = False
         self.prompted_recently = False
         self.keywords = keywords
         self.notif_engine = notif_controller()
+        self.timer = timer
         self.device_controller = device_controller
         self.resource_controller=  resource_controller
         self.window = None
@@ -42,27 +44,16 @@ class Vocal_Handler():
         if (now - time > timedelta(days=1)):
             self.keyword_prompt_due = True
     
+
     def is_operating_hours(self):
-        current_time = datetime.now()
-        current_hour = current_time.hour
-        current_minute = current_time.minute
+        self.operating_hours = self.timer.hour_match()
 
-        end_h, end_m = config.OPTIONS['op_h_end'].split(':')
-        start_h, start_m = config.OPTIONS['op_h_start'].split(':')
+        if self.timer.gui_refresh_due:
+            self.window.worker.reload_requested.emit()
+            self.timer.last_gui_refresh = datetime.now()
+            self.timer.gui_refresh_due = False
+    
 
-        
-        good = current_hour >= int(start_h) and current_hour <= int(end_h)
-        
-        if current_hour == int(start_h) and current_minute < int(start_m):
-            self.operating_hours = False
-
-        elif current_hour == int(end_h) and current_minute > int(end_m):
-            self.operating_hours = False
-
-        else:
-            
-            self.operating_hours = good
-        print(self.operating_hours)
 
     @staticmethod
     def proximity(fn):

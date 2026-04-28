@@ -192,7 +192,46 @@ font-size: 30px;
         padding: 6px 14px;
     }
 
-"""
+""", 
+ 'watch list': """ #list_item {
+                        background-color:black; border-bottom:1px solid grey;
+                    }
+
+                    #contact_alias {
+                    font-size: 25px; font-weight: bold;
+                    }
+
+                    #below_screen {
+                    background-color: black;
+                    }
+
+                    #title_messages {
+                      font-size:24px; font-weight: bold; color: white;
+                    }
+
+                    #message_item {
+                      background-color: black; color:white; border: 1px solid black; border-radius: 12px; margin-bottom:10px;
+                      margin-top:10px; border: 1px solid grey; 
+                    }
+                
+                    #top_row {
+                     background-color: black;
+                    }
+                    #top_row_col {
+                    background-color: grey; padding-left:10px;
+                    }
+                    #item_row_col {
+                    padding-left: 10px;
+                    }
+                    #scroll_area {
+                     background-color: #202329; 
+                    }
+
+                    #bad {
+                     background-color: salmon; color: white; border-radius:8px; border: 1px solid black;
+                    }
+ 
+ """
 
 
     
