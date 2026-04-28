@@ -17,7 +17,7 @@ import config
 
 
 from PyQt6.QtWidgets import QApplication
-
+from GUI.set_font_scaling import set_scaling
 from GUI.main_window import MainWindow
 
 
@@ -36,6 +36,7 @@ async def init():
 
     await init_db()
     config.OPTIONS = await load_options()
+    set_scaling()
     
     now = datetime.now()
     last_prompt = await get_logged_events("'Daily prompt'")

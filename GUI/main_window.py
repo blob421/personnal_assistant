@@ -24,7 +24,8 @@ class MainWindow(QMainWindow):
         super().__init__()
 
         ########## WINDOW ######################
-        self.setMinimumSize(1500, 800)
+        self.setBaseSize(1500, 800)
+        self.setMinimumSize(1000, 600)
         self.setWindowTitle("Assistant")
         self.setWindowIcon(QIcon(icon_path))
     
