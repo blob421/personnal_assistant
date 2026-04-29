@@ -89,12 +89,12 @@ styles = {
   'history': """
 
           #prompt_box {
-          background-color:black;
+          background-color:black; 
           border: 1px solid lightgrey; border-radius: 12px;
           
           }
           Prompt_label {
-                font-size: 30px;
+                font-size:26px; 
                 background-color: black;
                 color: white;
                 
@@ -151,7 +151,7 @@ styles = {
      
        'keywords': """
                  Prompt_label {
-                     font-size: 30px; border-bottom:2px solid black;
+                     font-size: 27px; border-bottom:2px solid black;
                   color: white;
                  }
 
@@ -209,6 +209,9 @@ styles = {
 """, 
  'watch list': """ #list_item {
                         background-color:black; border-bottom:1px solid grey;
+                    }
+                    #title_below {
+                       border-bottom: 1px solid black; background-color:black;
                     }
 
                     #title_contact_List {

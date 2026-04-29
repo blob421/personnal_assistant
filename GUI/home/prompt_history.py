@@ -1,16 +1,10 @@
 
-from PyQt6.QtWidgets import (QLabel, QListWidget, QWidget, QVBoxLayout, QHBoxLayout, QListWidgetItem,
-                             QTableView)
-from PyQt6.QtCore import Qt, QSize, QObject, pyqtSignal
+from PyQt6.QtWidgets import (QLabel, QListWidget, QWidget, QVBoxLayout, QHBoxLayout, QListWidgetItem)
+from PyQt6.QtCore import Qt, QSize
 from utilities.db_calls import get_events_gui
 from GUI.styles import styles
 from datetime import datetime
 
-class worker(QObject):
-    def __init__(self):
-        super().__init__()
-        reload_requested = pyqtSignal()
-        self.reload_requested.emit()
 
 class Prompt_Box(QWidget):
     def __init__(self):
@@ -27,6 +21,7 @@ class Prompt_Box(QWidget):
         
 
         prompt_label = Prompt_label('Prompt history')
+        prompt_label.setObjectName('prompt_top_title')
         prompt_label.setFixedHeight(65)
         self.history_list = Prompt_history()
   
@@ -57,13 +52,16 @@ class Prompt_history(QListWidget):
         if results:
             self.clear()
 
-            today_separator = QListWidgetItem()
-            self.addItem(today_separator)
-            separator1 = DaySeparatorWidget('Today')
-            self.setItemWidget(today_separator, separator1)
-            today_separator.setSizeHint(QSize(0, separator1.sizeHint().height()))
-
             now = datetime.now()
+
+            if any(datetime.fromisoformat(result[1]).day == now.day for result in results):
+                today_separator = QListWidgetItem()
+                self.addItem(today_separator)
+                separator1 = DaySeparatorWidget('Today')
+                self.setItemWidget(today_separator, separator1)
+                today_separator.setSizeHint(QSize(0, separator1.sizeHint().height()))
+
+          
             for result in results:
 
                 item = QListWidgetItem()
@@ -71,9 +69,10 @@ class Prompt_history(QListWidget):
 
                 if not now.day == time.day and not old:
                     old_separator = QListWidgetItem()
-                    separator2 = DaySeparatorWidget('Old')
                     self.addItem(old_separator)
-                    self.setItemWidget(today_separator, separator2)
+                    separator2 = DaySeparatorWidget('Old')
+                    
+                    self.setItemWidget(old_separator, separator2)
                     old_separator.setSizeHint(QSize(0, separator2.sizeHint().height()))
                     old = True
 

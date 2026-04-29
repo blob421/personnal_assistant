@@ -44,13 +44,16 @@ class LeftContainer(QWidget):
         self.setLayout(layout)
         layout.setContentsMargins(0,0,0,0)
         title = QLabel('Messages')
+        title.setMinimumHeight(70)
+        title.setObjectName('title_below')
         top_row = MessageItemWidget({'sender': 'Sender', 'subject': 'Subject', 'date': 'Date', 'tags': 'Tags'}, top_row=True)
         top_row.setMaximumHeight(150)
+        top_row.setMinimumHeight(100)
         self.bottom = MessageBox()
         title.setObjectName('title_messages')
-        layout.addWidget(title, 1, alignment=Qt.AlignmentFlag.AlignCenter)
-        layout.addWidget(top_row, 1)
-        layout.addWidget(self.bottom, 8)
+        layout.addWidget(title, alignment=Qt.AlignmentFlag.AlignHCenter | Qt.AlignmentFlag.AlignVCenter)
+        layout.addWidget(top_row)
+        layout.addWidget(self.bottom)
 
         
 
@@ -88,6 +91,7 @@ class MessageItemWidget(QWidget):
         super().__init__()
         layout = QHBoxLayout()
         self.setLayout(layout) 
+        layout.setContentsMargins(0, 0, 12, 0)
         sender_widget = QLabel(message['sender'])
         subject_widget = QLabel(message['subject'])
         
