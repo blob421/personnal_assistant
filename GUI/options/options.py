@@ -1,7 +1,8 @@
 
-from PyQt6.QtCore import QTime
+from PyQt6.QtCore import QTime, Qt
 from .widgets import OptionsContainer, TimeWidget, OptionBox
 import config
+from PyQt6.QtWidgets import QLineEdit, QSlider, QLabel
 
 class SilentMode(OptionsContainer):
     def __init__(self, style_class, label_name):
@@ -19,6 +20,29 @@ class EnableNotif(OptionsContainer):
         self.checkbox = OptionBox()
         self.checkbox.setChecked(config.OPTIONS['notifications'])
         self.layout.addWidget(self.checkbox)
+
+class FontScaling(OptionsContainer):
+    def __init__(self, style_class, label_name):
+        super().__init__(style_class, label_name)
+
+        self.slider_value = int(float(config.OPTIONS['font_scaling']) * 100)
+
+        self.widget = QSlider(Qt.Orientation.Horizontal)
+        self.widget.setRange(60, 100)
+        self.widget.setValue(self.slider_value)
+
+        self.widget.valueChanged.connect(self.change_slider)
+        self.layout.addWidget(self.widget)
+
+        self.slider_value = QLabel(str(self.slider_value / 100))
+        self.widget.setObjectName('slider')
+        self.layout.addWidget(self.slider_value)
+
+
+    def change_slider(self):
+        new_value = str(self.widget.value() / 100)
+        self.slider_value.setText(new_value)
+        
 
 
 class OperatingHours(OptionsContainer):

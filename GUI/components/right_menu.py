@@ -24,9 +24,10 @@ class RightMenu(QWidget):
         self.setAutoFillBackground(True)
         
         self.setMinimumWidth(200)
-        self.setMaximumWidth(300)
+        self.setMaximumWidth(330)
 
-        self.title = Prompt_label(name)
+        self.title = Prompt_label('Watched')
+        self.title.setObjectName('title_contact_List')
         self.title.setFixedHeight(65)
 
         self.items_list = ItemsList(self, self.keywords)
@@ -123,7 +124,7 @@ class ContactWidget(QWidget):
         email = QLabel(email_str)
         alias = QLabel(alias_str)
         alias.setObjectName('contact_alias')
-
+        email.setObjectName('contact_email')
         layout.addWidget(alias)
         layout.addWidget(email)
 

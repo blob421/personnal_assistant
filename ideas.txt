@@ -14,7 +14,7 @@ define interests and announce news from apis
 
 only announce good news / bad news 
 
-add font scaling slider or input in options 
+
 
 Config
 -------------------------------------

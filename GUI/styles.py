@@ -41,6 +41,18 @@ styles = {
             font-size: 33px;
             }
 
+            #slider::groove:horizontal {
+                          background: #292929;
+                        }
+
+            #slider::sub-page:horizontal {
+               background:  skyblue;
+
+            }
+            #slider::handle:horizontal {
+              background: lightgrey; width:16px;
+            }
+
 """,
    'titles': """   
             font-size: 38px;
@@ -53,8 +65,10 @@ styles = {
              """,
 
     'options_container': """
-font-size: 30px;
-  color: white;
+                        font-size: 30px;
+                        color: white;
+
+
   
                          """,
 
@@ -197,8 +211,15 @@ font-size: 30px;
                         background-color:black; border-bottom:1px solid grey;
                     }
 
+                    #title_contact_List {
+                         font-size:23px; font-weight: bold;
+                    }
+
                     #contact_alias {
                     font-size: 25px; font-weight: bold;
+                    }
+                    #contact_email {
+                     font-size:18px;
                     }
 
                     #below_screen {
@@ -210,7 +231,7 @@ font-size: 30px;
                     }
 
                     #message_item {
-                      background-color: black; color:white; border: 1px solid black; border-radius: 12px; margin-bottom:10px;
+                      background-color: #121212; color:white; border: 1px solid black; border-radius: 12px; margin-bottom:10px;
                       margin-top:10px; border: 1px solid grey; 
                     }
                 
@@ -218,10 +239,10 @@ font-size: 30px;
                      background-color: black;
                     }
                     #top_row_col {
-                    background-color: grey; padding-left:10px;
+                    background-color: #383838; padding-left:10px; font-size:24px;
                     }
                     #item_row_col {
-                    padding-left: 10px;
+                    padding-left: 2px; font-size:21px;
                     }
                     #scroll_area {
                      background-color: #202329; 
@@ -229,6 +250,7 @@ font-size: 30px;
 
                     #bad {
                      background-color: salmon; color: white; border-radius:8px; border: 1px solid black;
+                     font-size:20px;
                     }
  
  """

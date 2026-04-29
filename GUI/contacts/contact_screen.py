@@ -6,6 +6,8 @@ from GUI.components.right_menu import RightMenu
 from utilities.db_calls import get_watchlist_messages
 from GUI.styles import styles
 from datetime import datetime
+
+
 class ContactScreen(QWidget):
     def __init__(self):
         super().__init__()
@@ -43,7 +45,7 @@ class LeftContainer(QWidget):
         layout.setContentsMargins(0,0,0,0)
         title = QLabel('Messages')
         top_row = MessageItemWidget({'sender': 'Sender', 'subject': 'Subject', 'date': 'Date', 'tags': 'Tags'}, top_row=True)
-        top_row.setMaximumHeight(100)
+        top_row.setMaximumHeight(150)
         self.bottom = MessageBox()
         title.setObjectName('title_messages')
         layout.addWidget(title, 1, alignment=Qt.AlignmentFlag.AlignCenter)
@@ -108,6 +110,7 @@ class MessageItemWidget(QWidget):
             time_widget.setObjectName('top_row_col')
             sender_widget.setObjectName('top_row_col')
             subject_widget.setObjectName('top_row_col')
+            subject_widget.setWordWrap(True)
 
         self.setAttribute(Qt.WidgetAttribute.WA_StyledBackground, True)
      
@@ -115,18 +118,20 @@ class MessageItemWidget(QWidget):
         
 
         layout.addWidget(sender_widget, 3)
-        layout.addWidget(subject_widget, 4)
+        layout.addWidget(subject_widget, 3)
         layout.addWidget(time_widget, 2)
-        layout.addWidget(tags_widget, 1)
+        layout.addWidget(tags_widget, 2)
 
 class TagWidget(QWidget):
     def __init__(self, tags):
         super().__init__()
         layout = QHBoxLayout()
         self.setLayout(layout)
+        
         for t in tags:
             widget = QLabel(t)
             widget.setAlignment(Qt.AlignmentFlag.AlignCenter)
             widget.setObjectName(t)
             widget.setFixedHeight(30)
+            widget.setMaximumWidth(90)
             layout.addWidget(widget, 3)
