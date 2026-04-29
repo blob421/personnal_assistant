@@ -9,8 +9,9 @@ from datetime import datetime
 
 
 class ContactScreen(QWidget):
-    def __init__(self):
+    def __init__(self, vocal_handler):
         super().__init__()
+      
         layout = QVBoxLayout()
         self.setLayout(layout)
 
@@ -18,13 +19,13 @@ class ContactScreen(QWidget):
 
         title = Title('Watch list')
      
-        self.below = ContactMain()
+        self.below = ContactMain(vocal_handler)
         self.setStyleSheet(styles['watch list'])
         layout.addWidget(title)
         layout.addWidget(self.below)
 
 class ContactMain(QWidget):
-    def __init__(self):
+    def __init__(self,  vocal_handler):
         super().__init__()
         layout = QHBoxLayout()
         self.setLayout(layout)
@@ -33,7 +34,7 @@ class ContactMain(QWidget):
        
   
         self.left_cont = LeftContainer()
-        right_menu = RightMenu('watch list')
+        right_menu = RightMenu('watch list', vocal_handler)
         layout.addWidget(self.left_cont)
         layout.addWidget(right_menu)
 

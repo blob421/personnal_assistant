@@ -38,4 +38,4 @@ def wav_to_bytes(file_name, name):
    save_to_db(add_silence(buffer.getvalue()) , name, sample_rate)
 
 
-wav_to_bytes('sine_263Hz_1s.wav', 'Prompt sound A')
+wav_to_bytes('new.wav', 'Prompt sound A')

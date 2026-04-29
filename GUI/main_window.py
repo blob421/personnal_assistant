@@ -63,7 +63,8 @@ class MainWindow(QMainWindow):
         
         self.right_screen = QStackedWidget()
         
-        self.screens = {'home': Home(self, vocal_handler), 'options': Options(options), 'watch list': ContactScreen() }
+        self.screens = {'home': Home(self, vocal_handler), 'options': Options(options), 
+                        'watch list': ContactScreen(vocal_handler) }
       
         for _ ,v in self.screens.items():
             self.right_screen.addWidget(v)

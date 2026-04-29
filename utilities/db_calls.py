@@ -74,11 +74,7 @@ async def get_logged_events(cur, col:str=None, many:int=None,
 
     await cur.execute(f"""SELECT * FROM events {col_string}""")
     
-    if not many:
-    
-        results = await cur.fetchone()
-    else: 
-        results = await cur.fetchmany(many)
+    results = await cur.fetchone() if not many else await cur.fetchmany(many)
     
     if results:
  
@@ -137,11 +133,12 @@ async def mark_emails_read(cur, emails:list, err_str='Error inserting read email
 @with_sqlite3
 async def email_was_processed(cur, id:int, err_str='Error fetching emails in email_was_processed:'):
     
-    await cur.execute("""SELECT * FROM emails WHERE id=?""", [id])
-    result = await cur.fetchone()
-    if result:
-        return True
-    return False
+    await cur.execute("""SELECT 1 FROM emails WHERE id=?""", [id])
+
+    return await cur.fetchone() is not None
+
+  
+        
 
 
 
@@ -240,7 +237,7 @@ def add_keyword_gui(cur, term, err_str='Error inserting term in the database:'):
     
 @with_sqlite3_sync
 def get_events_gui(cur, err_str='Err fetching events from the db (gui)'):
-    cur.execute(f"""SELECT * FROM events ORDER BY id DESC LIMIT 20""")
+    cur.execute(f"""SELECT * FROM events WHERE message IS NOT NULL ORDER BY id DESC LIMIT 20""")
 
     results = cur.fetchall()
 
@@ -255,7 +252,7 @@ def load_contacts(cur, err_str='Error loading contacts from the database'):
     cur.execute("""SELECT * FROM contacts""")
     contacts = cur.fetchall()
     if contacts:
-        return [{'alias': c[0], 'email': c[1]} for c in contacts]
+        return {c[1]: c[0] for c in contacts} 
     return None
 
 @with_sqlite3_sync

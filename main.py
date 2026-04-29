@@ -77,7 +77,7 @@ async def proximity_loop():
     if not device_controller.address:
         await device_controller.scan_and_save()
         device_controller.address = device_controller.best_rssi
-        
+    await asyncio.sleep(3)    
     while True:
 
         await device_controller.proximity_scan()

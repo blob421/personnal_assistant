@@ -128,7 +128,9 @@ class Email_Main_Controller():
             await mark_emails_read(intent_emails)
             
             if need_reload:
-                self.window.watchlist_worker.reload_requested
+                self.window.watchlist_worker.reload_requested.emit()
+                to_announce = [m for m in intent_emails if m['tags'] is not None]
+                await self.vocal_handler.announce_messages(to_announce)
 
             return emails
                 

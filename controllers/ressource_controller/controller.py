@@ -1,28 +1,33 @@
 import subprocess
 import psutil
-
+import sys
 
 class Ressource_Controller():
     def __init__(self):
+        self.is_windows_os = sys.platform.startswith('win')
         self.gpu_vendor = self.detect_gpu_vendor()
         self.busy = False
         
+        
 
     def detect_gpu_vendor(self):
-        try:
-            output = subprocess.check_output(
-                ["powershell", "-Command",
-                "(Get-CimInstance Win32_VideoController).Name"],
-                text=True
-            ).lower()
+        if self.is_windows_os:
+            try:
+                output = subprocess.check_output(
+                    ["powershell", "-Command",
+                    "(Get-CimInstance Win32_VideoController).Name"],
+                    text=True
+                ).lower()
 
-            if "nvidia" in output:
-                return "nvidia"
-            if "amd" in output or "radeon" in output:
-                return "amd"
-            return "unknown"
-        except Exception:
-            return "unknown"
+                if "nvidia" in output:
+                    return "nvidia"
+                if "amd" in output or "radeon" in output:
+                    return "amd"
+                return "unknown"
+            except Exception:
+                return "unknown"
+        else: 
+            return 'unknown'
 
         
     def get_nvidia_util(self):

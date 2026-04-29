@@ -13,9 +13,9 @@ class RightMenu(QWidget):
         layout = QVBoxLayout()
         self.name = name
         self.keywords = None
-        if vocal_handler:
-            self.vocal_handler = vocal_handler
-            self.keywords:set = self.vocal_handler.keywords
+     
+        self.vocal_handler = vocal_handler
+        
            
 
         self.setLayout(layout)
@@ -53,9 +53,11 @@ class ItemsList(QListWidget):
                self.add_item(k, 'keywords')
         else:
             contacts = load_contacts()
+          
+            menu.vocal_handler.contacts = contacts
             if contacts:
-                for c in contacts:
-                    self.add_item(c, 'contacts')
+                for k, v in contacts.items():
+                    self.add_item({'alias': v, 'email': k}, 'contacts')
 
 
     def add_item(self, unit, type):
@@ -225,6 +227,7 @@ class AddButton(QPushButton):
     
             contact = {'alias': alias, 'email': email}
             add_contact(contact)
+            self.menu.vocal_handler.contacts[alias] = email
             self.menu.items_list.add_item(contact, 'contacts')
    
        
