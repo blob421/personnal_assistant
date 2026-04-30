@@ -5,6 +5,8 @@ from GUI.home.prompt_history import Prompt_label
 from PyQt6.QtCore import Qt, QSize
 
 from utilities.db_calls import delete_keyword, add_keyword_gui, add_contact, load_contacts, delete_contact
+from PyQt6.QtWidgets import QAbstractItemView
+
 
 
 class RightMenu(QWidget):
@@ -48,7 +50,9 @@ class ItemsList(QListWidget):
         super().__init__()
         self.menu = menu
         self.setStyleSheet(styles[menu.name])
-       
+        self.itemSelectionChanged.connect(self.onSelChanged)
+
+        self.setSelectionMode(QAbstractItemView.SelectionMode.MultiSelection)
         if keywords:
             for k in keywords:
                self.add_item(k, 'keywords')
@@ -60,6 +64,20 @@ class ItemsList(QListWidget):
                 for k, v in contacts.items():
                     self.add_item({'alias': v, 'email': k}, 'contacts')
 
+        
+
+    def onSelChanged(self):
+        sel = self.selectedItems()
+        if not sel:
+            self.menu.left_menu.left_cont.bottom.load_messages()
+            return
+        item = sel[0]
+
+        widget = self.itemWidget(item)
+        label = widget.findChildren(QLabel)[1]
+        email = label.text()
+        self.menu.left_menu.left_cont.bottom.load_messages(email)
+       
 
     def add_item(self, unit, type):
 
@@ -80,14 +98,14 @@ class ListWidget(QWidget):
         super().__init__()    
         self.menu = menu   
         self.widget_item = widget_item
+       
       
         self.layout = QHBoxLayout()
         self.setLayout(self.layout)
         self.layout.setContentsMargins(5, 5 , 5 , 5)
         self.setMinimumHeight(90)
 
-        self.setAttribute(Qt.WidgetAttribute.WA_StyledBackground, True)
-        self.setObjectName('list_item')
+    
 
         self.x_btn = QPushButton('X')
         
@@ -105,6 +123,7 @@ class ContactListWidget(ListWidget):
         self.layout.addWidget(contact_widget)
         self.layout.addWidget(self.x_btn, alignment=Qt.AlignmentFlag.AlignTop)
         self.x_btn.clicked.connect(lambda: self.delete_c(unit['alias']))
+
 
     def delete_c(self, name):
         reply = QMessageBox.question(
@@ -128,12 +147,12 @@ class ContactWidget(QWidget):
         self.setObjectName('contact_unit')
         layout = QVBoxLayout()
         self.setLayout(layout)
-        email = QLabel(email_str)
+        self.email = QLabel(email_str)
         alias = QLabel(alias_str)
         alias.setObjectName('contact_alias')
-        email.setObjectName('contact_email')
+        self.email.setObjectName('contact_email')
         layout.addWidget(alias)
-        layout.addWidget(email)
+        layout.addWidget(self.email)
 
 class KeywordsListWidget(ListWidget):
     def __init__(self, label_name, menu, widget_item):

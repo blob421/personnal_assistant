@@ -160,7 +160,7 @@ class Vocal_Handler():
               
 
             for t in nouns:
-                self.keywords.add(t)
+                self.keywords[t] = 0
                 await save_terms(t.lower())
 
             self.prompt_active = False
@@ -170,7 +170,7 @@ class Vocal_Handler():
        
     
     @proximity
-    async def announce_keyword_found(self, keywords:dict, near=True, intro_sound=True):
+    async def announce_keyword_found(self, keywords:dict, near=True, intro=True):
         
         announcements = await make_announcements(keywords, self.notif_engine, self.window.worker)
        
@@ -179,28 +179,29 @@ class Vocal_Handler():
 
         if near and not self.prompt_active:
 
-            if intro_sound:
+            if intro:
                 self.sound_engine.play_sound(prompt=True)
 
-            await asyncio.sleep(0.1)
+                await asyncio.sleep(0.1)
+                
+                self.play_sound(f'Are you there ? ... I might have found something interesting...')
             
-            self.play_sound(f'Are you there ? ... I might have found something interesting...')
-
             was_not_available = False
 
         else:
             was_not_available = True
-
-
+ 
+ 
         for idx, a in enumerate(announcements):
-
+            
             if not near or was_not_available:
                 await delay_event(message=a, type='Keywords found')
                 continue
-        
+            if idx == 0 : 
+                await asyncio.sleep(0.5)
             if idx > 0:
                 await asyncio.sleep(1)
-
+            
             self.play_sound(a)
 
         if self.keyword_prompt_due and (near or not was_not_available):
@@ -218,7 +219,9 @@ class Vocal_Handler():
             self.play_sound(vocal_base)
             await asyncio.sleep(0.3)
 
+     
         for idx, m in enumerate(messages):
+        
             alias = self.contacts[m['sender']]
         
             base_string =  'You also received' if idx > 0 else 'You received'

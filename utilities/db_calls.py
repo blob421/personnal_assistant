@@ -42,22 +42,26 @@ def with_sqlite3(fn):
     
 @with_sqlite3
 async def load_keywords(cur):
-    keywords = set()
+    keywords = {}
 
 
     await cur.execute('SELECT * FROM search_terms')
     terms = await cur.fetchall()
     for t in terms:
-        keywords.add(t[1])
+        keywords[t[1]] = t[2]
 
     return keywords
 
 @with_sqlite3
-async def save_terms(cur, term, err_str='Error inserting term in the database:'):
-    now = datetime.now().isoformat()
+async def save_terms(cur, term=None, occurences=None, err_str='Error inserting term in the database:'):
 
-    await cur.execute("""INSERT OR IGNORE INTO search_terms(date, term) VALUES (?,?)""", 
-                                                                                [now, term])
+    if term:
+        now = datetime.now().isoformat()
+        await cur.execute("""INSERT OR IGNORE INTO search_terms(date, term, count) VALUES (?,?,?)""", 
+                                                                                    [now, term, 0])
+    elif occurences:
+        for k, v in occurences.items():
+            await cur.execute("""UPDATE search_terms SET count=? WHERE term=?""", [v, k])
 
   
 
@@ -122,7 +126,7 @@ async def mark_emails_read(cur, emails:list, err_str='Error inserting read email
     for e in emails:
         subject = e['subject']
         id = e['id']
-        intent = e['tags']
+        intent = json.dumps(list(e['tags']))
         sender = e['sender']
    
         await cur.execute("""INSERT OR IGNORE INTO emails(date, id, subject, tags , sender) VALUES (?,?,?,?,?)""",
@@ -158,7 +162,8 @@ async def init_db(cur, err_str='Error creating tables during init'):
     await cur.execute("""CREATE TABLE IF NOT EXISTS events(id INTEGER PRIMARY KEY AUTOINCREMENT,
                                                         date TEXT,
                                                         type VARCHAR(60),
-                                                        message TEXT
+                                                        message TEXT,
+                                                        count INTEGER
                                                         )""")
     
     await cur.execute("""CREATE INDEX IF NOT EXISTS event_type_idx on events(type)""")
@@ -271,9 +276,12 @@ def delete_contact(cur, name, err_str='Error deleting contacts from the database
     cur.execute("""UPDATE contacts SET active=? WHERE alias=?""", [False,name])
 
 @with_sqlite3_sync
-def get_watchlist_messages(cur, err_str='Error fetching messages from db for watchlist'):
+def get_watchlist_messages(cur, email=None, err_str='Error fetching messages from db for watchlist'):
     emails = []
-    cur.execute("""SELECT * FROM emails WHERE tags IS NOT NULL ORDER BY id DESC LIMIT 30""")
+    if not email:
+        cur.execute("""SELECT * FROM emails WHERE tags IS NOT NULL ORDER BY id DESC LIMIT 30""")
+    else:
+        cur.execute("""SELECT * FROM emails WHERE tags IS NOT NULL AND sender=? ORDER BY id DESC LIMIT 30""", [email])
     results = cur.fetchall()
     for r in results:
         emails.append({'date': r[1], 'subject': r[2], 'tags': json.loads(r[3]), 'sender': r[4]})

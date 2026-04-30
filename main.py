@@ -104,7 +104,7 @@ async def GUI_loop():
     vocal_handler.window = window
     email_controller.window = window
     window.show()
-    window.show_screen('home')
+    window.show_screen('watch list')
 
     window.screens['home'].prompt_history.history_list.get_events()
     app.exec()

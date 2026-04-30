@@ -3,7 +3,7 @@ from .email_auth_manager import Email_Auth_Manager
 from .extract_email import extract_mail
 import aioimaplib
 import logging
-from utilities.db_calls import mark_emails_read, email_was_processed, load_contacts_async
+from utilities.db_calls import mark_emails_read, email_was_processed, load_contacts_async, save_terms
 from utilities.functions import extract_gmail_msgid, are_keywords_in_messages
 from controllers.email_controller.get_intent import get_intent
 import asyncio
@@ -35,13 +35,22 @@ class Email_Main_Controller():
     
         while True:
             await self.connect()
-            messages = await self.get_emails('Google', 'INBOX')
+            messages, something_was_announced = await self.get_emails('Google', 'INBOX')
         
             if messages:
-                found_keywords = await are_keywords_in_messages(messages, self.keywords)
+                found_keywords, occurences = await are_keywords_in_messages(messages, self.keywords.keys())
                 if found_keywords:
                     await self.vocal_handler.last_asked_for_keywords()
-                    await self.vocal_handler.announce_keyword_found(found_keywords)
+                    await self.vocal_handler.announce_keyword_found(found_keywords, intro = not something_was_announced)
+                if occurences:
+                    for k, v in occurences.items():
+                        self.keywords[k] += v
+                        occurences[k] = self.keywords[k]
+                    self.window.keywords_updater.reload_requested.emit()
+
+
+                    await save_terms(occurences=occurences)
+
             await asyncio.sleep(1800)
 
 
@@ -129,10 +138,10 @@ class Email_Main_Controller():
             
             if need_reload:
                 self.window.watchlist_worker.reload_requested.emit()
-                to_announce = [m for m in intent_emails if m['tags'] is not None]
+                to_announce = [m for m in intent_emails]
                 await self.vocal_handler.announce_messages(to_announce)
 
-            return emails
+            return emails, need_reload
                 
         return None
 

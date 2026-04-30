@@ -29,6 +29,10 @@ class Watchlist_Worker(QObject):
     def __init__(self):
         super().__init__()
 
+class Keywords_worker(QObject):
+    reload_requested = pyqtSignal()
+    def __init__(self):
+        super().__init__()
 
 class MainWindow(QMainWindow):
     def __init__(self, options, vocal_handler):
@@ -97,7 +101,9 @@ class MainWindow(QMainWindow):
         self.worker.reload_requested.connect(self.screens['home'].prompt_history.history_list.get_events)
         self.watchlist_worker = Watchlist_Worker()
         self.watchlist_worker.reload_requested.connect(self.screens['watch list'].below.left_cont.bottom.load_messages)
-        #self.tray.show()
+        self.keywords_updater = Keywords_worker()
+        self.keywords_updater.reload_requested.connect(self.screens['home'].keywords_menu.keywords_list.clear_Keywords)
+        self.tray.show()
 
 
 

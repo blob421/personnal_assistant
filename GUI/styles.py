@@ -90,7 +90,7 @@ styles = {
 
           #prompt_box {
           background-color:black; 
-          border: 1px solid lightgrey; border-radius: 12px;
+          border-radius: 12px;
           
           }
           Prompt_label {
@@ -150,6 +150,9 @@ styles = {
 ,
      
        'keywords': """
+                #keyword_count{
+                color:black; border:1px solid white; background-color: #80b9f2; border-radius: 6px; font-size: 24px;
+                }
                  QMessageBox {
                     font-size: 23px;
                     }
@@ -165,7 +168,7 @@ styles = {
                  KeywordsMenu {
               
                 border: 2px solid grey;
-                 background-color: #1f293b; border-radius:9px;
+                 border-radius:9px;
                 }
 
                 KeyWordsList {
@@ -214,8 +217,11 @@ styles = {
     }
 
 """, 
- 'watch list': """ #list_item {
+ 'watch list': """ QListWidget::item {
                         background-color:black; border-bottom:1px solid grey;
+                    }
+                    QListWidget::item::selected {
+                       background-color:#5b36b3;
                     }
                     #title_below {
                        border-bottom: 1px solid black; background-color:black;
@@ -230,7 +236,7 @@ styles = {
                          font-size:23px; font-weight: bold;
                     }
                     #x_btn::hover {
-                     background-color: salmon;
+                     background-color: #5b36b3;
                     }
                     #contact_alias {
                     font-size: 24px; font-weight: bold;
@@ -278,7 +284,7 @@ styles = {
                      font-size:20px;
                     }
                     #good {
-                        background-color: lightgreen; color: grey; border-radius:8px; border: 1px solid black;
+                        background-color: lightgreen; color: black; border-radius:8px; border: 1px solid black;
                      font-size:20px;
                     }
  

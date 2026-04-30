@@ -5,9 +5,6 @@ ask to open gmail
 
 wake you up feature 
 
-email watch list screen with intent analysis and announcements . 2-3 tags and a list of these msgs .
-translate address -> name 
-
 define important summary of messages indicators
 
 define interests and announce news from apis 
@@ -38,5 +35,3 @@ bug wrong creds when rotating keys  ???
 
 Tests
 ----------------------------------------
-test watch list signal 
-Switch sound device while running 

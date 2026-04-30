@@ -4,9 +4,10 @@ from utilities.db_calls import get_pending_events, save_event
 from collections import defaultdict
 nlp = spacy.load("en_core_web_sm")
 
-async def are_keywords_in_messages(messages:list, keywords:set):
+async def are_keywords_in_messages(messages:list, keywords:list):
+    occurences = {}
     found = []
-     
+  
     for m in messages:
         sender = m['sender']
         text = m['text']
@@ -17,11 +18,13 @@ async def are_keywords_in_messages(messages:list, keywords:set):
             if text:
                 if k.lower() in text.lower() or k.lower() in subject.lower():
                     found.append({'keyword': k, 'sender': sender})
+                    occurences[k] = occurences.get(k, 0) + 1
             else:
                 if k.lower() in subject.lower():
                     found.append({'keyword': k, 'sender': sender})
+                    occurences[k] = occurences.get(k, 0) + 1
                 
-    return found
+    return found, occurences
 
 def extract_nouns(text):
     doc = nlp(text)

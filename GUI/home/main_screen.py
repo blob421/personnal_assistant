@@ -25,7 +25,8 @@ class Home(QWidget):
 
         self.prompt_history = Prompt_Box()
         below_layout.addWidget(self.prompt_history)
-        below_layout.addWidget(KeywordsMenu(vocal_handler))
+        self.keywords_menu = KeywordsMenu(vocal_handler)
+        below_layout.addWidget(self.keywords_menu)
         main_layout.addWidget(title_widget)
         main_layout.addLayout(below_layout)
         main_layout.setContentsMargins(0, 0, 0, 0)

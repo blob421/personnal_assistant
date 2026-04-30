@@ -18,7 +18,7 @@ async def get_intent(emails, controller):
         elif score > 0 :
             tags.add('good')
 
-        intent_emails.append({**e, 'tags': json.dumps(list(tags))})
+        intent_emails.append({**e, 'tags': tags})
 
     return intent_emails, reload
 

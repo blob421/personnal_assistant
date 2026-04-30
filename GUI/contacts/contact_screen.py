@@ -48,8 +48,8 @@ class LeftContainer(QWidget):
         title.setMinimumHeight(70)
         title.setObjectName('title_below')
         top_row = MessageItemWidget({'sender': 'Sender', 'subject': 'Subject', 'date': 'Date', 'tags': 'Tags'}, top_row=True)
-        top_row.setMaximumHeight(150)
-        top_row.setMinimumHeight(100)
+        top_row.setFixedHeight(70)
+      
         self.bottom = MessageBox()
         title.setObjectName('title_messages')
         layout.addWidget(title, alignment=Qt.AlignmentFlag.AlignHCenter | Qt.AlignmentFlag.AlignVCenter)
@@ -61,9 +61,13 @@ class LeftContainer(QWidget):
 class MessageBox(QScrollArea):
     def __init__(self):
         super().__init__()
+        container = QWidget()
+        self.setWidget(container)
+        self.setWidgetResizable(True)
+
         self.contacts = load_contacts_ref()
-        self.layout = QVBoxLayout()
-        self.setLayout(self.layout)
+        self.layout = QVBoxLayout(container)
+     
         self.layout.setContentsMargins(0,10,8,10)
         self.load_messages()
         self.setObjectName('scroll_area')
@@ -77,10 +81,10 @@ class MessageBox(QScrollArea):
             if widget:
                 widget.deleteLater()
 
-    def load_messages(self):
+    def load_messages(self, email=None):
         self.clear_layout()
-  
-        messages = get_watchlist_messages()
+        
+        messages = get_watchlist_messages(email=email)
         if messages:
             for m in messages:
                 widget = MessageItemWidget(m, self)
