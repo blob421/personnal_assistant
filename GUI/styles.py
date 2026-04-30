@@ -150,6 +150,13 @@ styles = {
 ,
      
        'keywords': """
+                 QMessageBox {
+                    font-size: 23px;
+                    }
+                 QMessageBox QPushButton {
+                     font-size: 23px;
+                    }
+
                  Prompt_label {
                      font-size: 27px; border-bottom:2px solid black;
                   color: white;
@@ -213,13 +220,20 @@ styles = {
                     #title_below {
                        border-bottom: 1px solid black; background-color:black;
                     }
-
+                    QMessageBox {
+                    font-size: 23px;
+                    }
+                    QMessageBox QPushButton {
+                     font-size: 23px;
+                    }
                     #title_contact_List {
                          font-size:23px; font-weight: bold;
                     }
-
+                    #x_btn::hover {
+                     background-color: salmon;
+                    }
                     #contact_alias {
-                    font-size: 25px; font-weight: bold;
+                    font-size: 24px; font-weight: bold;
                     }
                     #contact_email {
                      font-size:18px;
@@ -234,8 +248,9 @@ styles = {
                     }
 
                     #message_item {
-                      background-color: #121212; color:white; border: 1px solid black; border-radius: 12px; margin-bottom:10px;
-                      margin-top:10px; border: 1px solid grey; 
+                      background-color: #121212; color:white; border: 1px solid black; border-radius: 12px;
+                      
+                      border: 1px solid grey; border-left:0px;
                     }
                 
                     #top_row {
@@ -245,7 +260,10 @@ styles = {
                     background-color: #383838; padding-left:10px; font-size:24px;
                     }
                     #item_row_col {
-                    padding-left: 2px; font-size:21px;
+                    padding-left: 10px; font-size:21px; border-right:1px solid grey;
+                    }
+                    #item_row_col_sender {
+                     font-size: 18px; padding-left: 10px;
                     }
                     #scroll_area {
                      background-color: #202329; 
@@ -253,6 +271,14 @@ styles = {
 
                     #bad {
                      background-color: salmon; color: white; border-radius:8px; border: 1px solid black;
+                     font-size:20px;
+                    }
+                    #urgent {
+                     background-color: royalblue; color: white; border-radius:8px; border: 1px solid black;
+                     font-size:20px;
+                    }
+                    #good {
+                        background-color: lightgreen; color: grey; border-radius:8px; border: 1px solid black;
                      font-size:20px;
                     }
  

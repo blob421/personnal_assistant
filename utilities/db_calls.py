@@ -175,7 +175,8 @@ async def init_db(cur, err_str='Error creating tables during init'):
                                                             value VARCHAR(255)
                 )""")
     await cur.execute("""CREATE TABLE IF NOT EXISTS contacts(alias VARCHAR(30), 
-                                                             email VARCHAR(50) UNIQUE 
+                                                             email VARCHAR(50) UNIQUE,
+                                                             active BOOLEAN
                                                              )""")
 
     await cur.execute("""SELECT * FROM options""")
@@ -216,7 +217,7 @@ def save_options(cur, err_str='Error saving options to DB'):
    
     for n, v in config.OPTIONS.items():
         boo = None if type(v) == str else v
-        value = None if type(v) == bool else v
+        value = None if type(v) == bool or v == 0 or v == 1 else v
 
 
         cur.execute("""UPDATE options SET bool=?, value=? WHERE name=?""",
@@ -245,19 +246,29 @@ def get_events_gui(cur, err_str='Err fetching events from the db (gui)'):
 
 @with_sqlite3_sync
 def add_contact(cur,  contact:dict, err_str='Error adding contact to the database'):
-    cur.execute("""INSERT OR IGNORE INTO contacts VALUES(?,?)""", [contact['alias'], contact['email']])
+    
+    cur.execute("""INSERT OR REPLACE INTO contacts VALUES(?,?,?)""", [contact['alias'], contact['email'], True])
 
 @with_sqlite3_sync
 def load_contacts(cur, err_str='Error loading contacts from the database'):
-    cur.execute("""SELECT * FROM contacts""")
+    cur.execute("""SELECT * FROM contacts WHERE active=?""", [True])
     contacts = cur.fetchall()
     if contacts:
         return {c[1]: c[0] for c in contacts} 
     return None
 
 @with_sqlite3_sync
+def load_contacts_ref(cur ,err_str = 'Error loading all contacts'):
+    cur.execute("""SELECT * FROM contacts""")
+    contacts = cur.fetchall()
+    if contacts:
+        return {c[1]: c[0] for c in contacts} 
+    return None
+
+
+@with_sqlite3_sync
 def delete_contact(cur, name, err_str='Error deleting contacts from the database'):
-    cur.execute("""DELETE FROM contacts WHERE alias=?""", [name])
+    cur.execute("""UPDATE contacts SET active=? WHERE alias=?""", [False,name])
 
 @with_sqlite3_sync
 def get_watchlist_messages(cur, err_str='Error fetching messages from db for watchlist'):

@@ -214,22 +214,31 @@ class Vocal_Handler():
         if near:
             self.sound_engine.play_sound(prompt=True)
             await asyncio.sleep(0.5)
-            vocal_base = f'Are you there ? ... Something popped up in your watchlist'
+            vocal_base = f'Are you there ? ... Something popped up in your watchlist.'
             self.play_sound(vocal_base)
             await asyncio.sleep(0.3)
 
-        for m in messages:
+        for idx, m in enumerate(messages):
             alias = self.contacts[m['sender']]
+        
+            base_string =  'You also received' if idx > 0 else 'You received'
 
-            if 'urgent' in m['tags']:
-                m_string = f'You received a message from {alias}, it seemed urgent'
+            if not m['tags']:
+                m_string = f'{base_string} a message from {alias}'
+
+            elif 'urgent' in m['tags'] and 'bad' in m['tags']:
+                m_string = f'{base_string} an urgent message from {alias}, but I must warn you , it looks bad'
+
+            elif 'urgent' in m['tags']:
+                m_string = f'{base_string} a message from {alias}, it seemed urgent'
 
             elif 'bad' in m['tags']:
-                m_string = f'You received a message from {alias}, but I must warn you , it looks bad'
+                m_string = f'{base_string} a message from {alias}, but I must warn you , it looks bad'
 
             elif 'good' in m['tags']:
-                m_string = f"You received a message from {alias}, looking good"
+                m_string = f"{base_string} a message from {alias}, looking good"
 
+            self.notif_engine.notify(title='Watchlist event', message=m_string)
  
             if not near:
                 await delay_event(message=m_string, type='watch list')
@@ -237,10 +246,12 @@ class Vocal_Handler():
             else:
                 self.play_sound(m_string)
                 await asyncio.sleep(0.5)
-
+       
         if self.keyword_prompt_due and near:
                 await asyncio.sleep(1)
                 await self.prompt_for_terms()
+        
+
             
             
      

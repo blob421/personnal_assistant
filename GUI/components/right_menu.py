@@ -8,12 +8,13 @@ from utilities.db_calls import delete_keyword, add_keyword_gui, add_contact, loa
 
 
 class RightMenu(QWidget):
-    def __init__(self,  name, vocal_handler=None):
+    def __init__(self,  name, vocal_handler, left_menu):
         super().__init__()
+        self.left_menu = left_menu
         layout = QVBoxLayout()
         self.name = name
         self.keywords = None
-     
+      
         self.vocal_handler = vocal_handler
         
            
@@ -47,7 +48,7 @@ class ItemsList(QListWidget):
         super().__init__()
         self.menu = menu
         self.setStyleSheet(styles[menu.name])
-
+       
         if keywords:
             for k in keywords:
                self.add_item(k, 'keywords')
@@ -79,19 +80,22 @@ class ListWidget(QWidget):
         super().__init__()    
         self.menu = menu   
         self.widget_item = widget_item
+      
         self.layout = QHBoxLayout()
         self.setLayout(self.layout)
+        self.layout.setContentsMargins(5, 5 , 5 , 5)
         self.setMinimumHeight(90)
 
         self.setAttribute(Qt.WidgetAttribute.WA_StyledBackground, True)
         self.setObjectName('list_item')
 
         self.x_btn = QPushButton('X')
+        
         self.x_btn.setCursor(Qt.CursorShape.PointingHandCursor)
-        self.x_btn.setObjectName('x_btn_keywords')
+        self.x_btn.setObjectName('x_btn')
 
 
-        self.x_btn.setFixedSize(45,45)
+        self.x_btn.setFixedSize(35,35)
 
 
 class ContactListWidget(ListWidget):
@@ -99,7 +103,7 @@ class ContactListWidget(ListWidget):
         super().__init__(menu, widget_item)
         contact_widget = ContactWidget(unit['email'], unit['alias'])
         self.layout.addWidget(contact_widget)
-        self.layout.addWidget(self.x_btn)
+        self.layout.addWidget(self.x_btn, alignment=Qt.AlignmentFlag.AlignTop)
         self.x_btn.clicked.connect(lambda: self.delete_c(unit['alias']))
 
     def delete_c(self, name):
@@ -116,6 +120,7 @@ class ContactListWidget(ListWidget):
             self.menu.items_list.takeItem(row) 
     
             self.menu.items_list.removeItemWidget(self.widget_item)
+            self.menu.left_menu.left_cont.bottom.load_messages()
       
 class ContactWidget(QWidget):
     def __init__(self, email_str, alias_str):
@@ -144,12 +149,14 @@ class KeywordsListWidget(ListWidget):
 
 
     def delete_k(self, keyword):
-        reply = QMessageBox.question(
-        self,
+        dialog = QMessageBox()
+        reply = dialog.question(self,
         "Confirm deletion",
         f"Delete keyword : '{keyword}'?",
-        QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No
-    )
+        QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No)
+  
+      
+        
 
         if reply == QMessageBox.StandardButton.Yes:
             delete_keyword(keyword)
@@ -171,6 +178,7 @@ class TwoInputDialog(QDialog):
         # First input
         layout.addWidget(QLabel("Alias:"))
         self.input1 = QLineEdit()
+        self.input1.setMaxLength(19)
         layout.addWidget(self.input1)
 
         # Second input
@@ -227,6 +235,8 @@ class AddButton(QPushButton):
     
             contact = {'alias': alias, 'email': email}
             add_contact(contact)
+            self.menu.left_menu.left_cont.bottom.contacts[email] = alias
+            self.menu.left_menu.left_cont.bottom.load_messages()
             self.menu.vocal_handler.contacts[alias] = email
             self.menu.items_list.add_item(contact, 'contacts')
    

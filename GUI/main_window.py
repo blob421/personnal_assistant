@@ -5,8 +5,12 @@ from GUI.left_menu import Left_Menu
 from GUI.contacts.contact_screen import ContactScreen
 from GUI.home.main_screen import Home
 from GUI.options.options_screen import Options
+from utilities.db_calls import save_options
+import config
+
+
 from GUI.styles import styles
-from PyQt6.QtCore import QObject, pyqtSignal, Qt
+from PyQt6.QtCore import QObject, pyqtSignal, Qt, QTimer
 from PyQt6.QtWidgets import QSpacerItem, QSizePolicy
 ### Layout => Widgets
 ### Layout => Layout with widgets
@@ -29,10 +33,18 @@ class Watchlist_Worker(QObject):
 class MainWindow(QMainWindow):
     def __init__(self, options, vocal_handler):
         super().__init__()
+      
+        self.new_size = None
 
+        ########################################
+        self.resize_timer = QTimer(self)
+        self.resize_timer.setSingleShot(True)
+        self.resize_timer.timeout.connect(self.delay_resize)
         ########## WINDOW ######################
-    
+        w, h = config.OPTIONS['window_size'].split(':')
         self.setMinimumSize(1400, 750)
+        self.setBaseSize(int(w), int(h))
+
         self.setWindowTitle("Assistant")
         self.setWindowIcon(QIcon(icon_path))
     
@@ -85,7 +97,9 @@ class MainWindow(QMainWindow):
         self.worker.reload_requested.connect(self.screens['home'].prompt_history.history_list.get_events)
         self.watchlist_worker = Watchlist_Worker()
         self.watchlist_worker.reload_requested.connect(self.screens['watch list'].below.left_cont.bottom.load_messages)
-        self.tray.show()
+        #self.tray.show()
+
+
 
     def show_screen(self, screen:str):
         self.right_screen.setCurrentWidget(self.screens[screen])
@@ -94,7 +108,18 @@ class MainWindow(QMainWindow):
         event.ignore()
         self.tray.show()
         self.hide()
- 
+
+    def delay_resize(self):
+        config.OPTIONS['window_size'] = self.new_size
+        save_options() 
+    
+
+    def resizeEvent(self, event):
+        new_size = event.size()
+        self.new_size = f'{new_size.width()}:{new_size.height()}'
+        self.resize_timer.start(5000) 
+
+        super().resizeEvent(event)
 
     def show_normal(self):
         self.tray.hide()

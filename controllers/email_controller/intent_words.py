@@ -28,12 +28,12 @@ URGENT_WORDS = [
     # English
     'urgent', 'asap', 'immediately', 'right away', 'as soon as possible',
     'deadline', 'last time', 'final notice', 'priority', 'escalate',
-    'escalation', 'time sensitive',
+    'escalation', 'time sensitive', 'hurry', 'quick'
 
     # French
     'urgent', 'immédiatement', 'tout de suite', 'dès que possible',
-    'au plus vite', 'date limite', 'dernier avertissement',
-    'priorité', 'escalade', 'sensible au temps'
+    'date limite', 'dernier avertissement',
+    'priorité', 'escalade', 'sensible au temps', 'dépêche', 'vite'
 ]
 
 HOSTILE_WORDS = [

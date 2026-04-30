@@ -31,16 +31,15 @@ async def score_message(text):
     text_lower = text.lower()
     
     if any(w in text_lower for w in GOOD_WORDS):
-        tags.add('good')
+       
         score += 1
-
+    
     if any(w in text_lower for w in BAD_WORDS):
-        tags.add('bad')
         score -= 1
 
     if any(w in text_lower for w in URGENT_WORDS):
         tags.add('urgent')
-        score -= 2
+        
 
     if any(w in text_lower for w in HOSTILE_WORDS):
         tags.add('hostile')

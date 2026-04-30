@@ -1,6 +1,7 @@
 from notifypy import Notify
 import config
-
+import os
+icon_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '../../', 'GUI', 'assets', 'logo.png'))
 class notif_controller():
     def __init__(self):
         self.title = None
@@ -15,6 +16,7 @@ class notif_controller():
     def send_notif(self):
 
         notification = Notify()
+        notification.icon = icon_path
         notification.title = self.title
         notification.message = self.message
         notification.send()
