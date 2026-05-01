@@ -8,7 +8,6 @@ from controllers.notifications.controller import notif_controller
 from .sound_engine import SoundEngine
 import asyncio
 import config
-
 from datetime import datetime, timedelta
 
 
@@ -69,7 +68,7 @@ class Vocal_Handler():
     
             if (not self.device_controller.user_is_near or self.resource_controller.busy 
                                                         or not self.operating_hours):
-                
+         
                 return await fn(self, *args, **kwargs, near=False)
             else:
                 try:
@@ -82,9 +81,10 @@ class Vocal_Handler():
         return wrapper
     
 
-
-    async def handle_pending_events(self):
-            if not self.operating_hours: return
+    @proximity
+    async def handle_pending_events(self, near=True):
+            if not self.operating_hours or not near: return
+            await self.last_asked_for_keywords()
 
             pending_prompts = await extract_pending_prompts()
             messages = pending_prompts['result']
@@ -96,11 +96,11 @@ class Vocal_Handler():
                 self.play_sound('Are you there ? ... I might have found something interesting...')
 
                 for k , value in messages.items():
-                    if k == 'keyword found':
+                    if k == 'Keyword found':
                        
                         await asyncio.sleep(1)
                         for m in value:
-                                await asyncio.sleep(2)
+                                await asyncio.sleep(0.3)
                                 self.play_sound(m)
 
                     if k == 'watch list':
@@ -117,10 +117,10 @@ class Vocal_Handler():
 
     
 
-
-    async def prompt_for_terms(self):
+    @proximity
+    async def prompt_for_terms(self, near=True):
        
-
+        if not near: return
         if not self.prompted_recently and not config.OPTIONS['silent_mode']:
 
             
@@ -138,7 +138,7 @@ class Vocal_Handler():
                 return
             
             await asyncio.sleep(0.5)
-            self.play_sound('All right , tell me what I should add to your list')
+            self.play_sound('All right , tell me ... what should I add to your list ?')
             await asyncio.sleep(0.1)
             answer = await self.sound_engine.sound_to_string()
             
@@ -175,7 +175,7 @@ class Vocal_Handler():
         announcements = await make_announcements(keywords, self.notif_engine, self.window.worker)
        
         if config.OPTIONS['silent_mode']: return 
-
+   
 
         if near and not self.prompt_active:
 
@@ -185,61 +185,78 @@ class Vocal_Handler():
                 await asyncio.sleep(0.1)
                 
                 self.play_sound(f'Are you there ? ... I might have found something interesting...')
+
+            else:
+
+                await asyncio.sleep(0.1)
+                
+                self.play_sound(f'There is also something else ...')
             
             was_not_available = False
 
         else:
             was_not_available = True
  
- 
-        for idx, a in enumerate(announcements):
-            
-            if not near or was_not_available:
-                await delay_event(message=a, type='Keywords found')
-                continue
-            if idx == 0 : 
-                await asyncio.sleep(0.5)
-            if idx > 0:
-                await asyncio.sleep(1)
-            
-            self.play_sound(a)
+        full_announcement_string = ' '.join(announcements)
 
-        if self.keyword_prompt_due and (near or not was_not_available):
-                await asyncio.sleep(1)
-                await self.prompt_for_terms()
+        if not near or was_not_available:
+            await delay_event(message=full_announcement_string, type='Keyword found')
+        
+        else:       
+            self.play_sound(full_announcement_string)
+
+
                 
   
     @proximity
-    async def announce_messages(self, messages, near=True):
+    async def announce_messages(self, messages:dict, near=True):
 
         if near:
             self.sound_engine.play_sound(prompt=True)
             await asyncio.sleep(0.5)
-            vocal_base = f'Are you there ? ... Something popped up in your watchlist.'
+            vocal_base = f'Are you there ? ... Something came up in your watchlist.'
             self.play_sound(vocal_base)
             await asyncio.sleep(0.3)
 
      
-        for idx, m in enumerate(messages):
-        
-            alias = self.contacts[m['sender']]
-        
+        for idx, (sender, msgs) in enumerate(messages.items()):
+            number_of_messages = len(msgs)
+            amnt_string = 'a message' if number_of_messages == 1 else f'{number_of_messages} messages'
+            alias = self.contacts[sender]
+            
             base_string =  'You also received' if idx > 0 else 'You received'
 
-            if not m['tags']:
-                m_string = f'{base_string} a message from {alias}'
+            m_string = f'{base_string} {amnt_string} from {alias} ,'
 
-            elif 'urgent' in m['tags'] and 'bad' in m['tags']:
-                m_string = f'{base_string} an urgent message from {alias}, but I must warn you , it looks bad'
+         
+       
+            if number_of_messages > 1:
+                fist_tags_msg = None
+                for idx , n in enumerate(msgs):
 
-            elif 'urgent' in m['tags']:
-                m_string = f'{base_string} a message from {alias}, it seemed urgent'
+                    if not n['tags']:
+                        continue
+                    
+                    state = ' but '.join(n['tags'])
+                    if idx == 0 or fist_tags_msg is None:
+                        m_string += f' One seemed {state}'
+                        fist_tags_msg = True
 
-            elif 'bad' in m['tags']:
-                m_string = f'{base_string} a message from {alias}, but I must warn you , it looks bad'
+ 
+                    elif idx == number_of_messages - 1:
+                        m_string += f' and the last one seemed {state}'
+                    
+                    else:
+                        m_string += f', an other seemed {state}'
+            else:
+                if not msgs[0]['tags']:
+                    pass
+                state = ' but '.join(msgs[0]['tags'])
+                m_string += f'it seemed {state}'
 
-            elif 'good' in m['tags']:
-                m_string = f"{base_string} a message from {alias}, looking good"
+     
+                
+       
 
             self.notif_engine.notify(title='Watchlist event', message=m_string)
  
@@ -250,9 +267,7 @@ class Vocal_Handler():
                 self.play_sound(m_string)
                 await asyncio.sleep(0.5)
        
-        if self.keyword_prompt_due and near:
-                await asyncio.sleep(1)
-                await self.prompt_for_terms()
+      
         
 
             

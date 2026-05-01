@@ -11,12 +11,13 @@ define interests and announce news from apis
 
 only announce good news / bad news 
 
-
+Intro prompt , ask to add keywords
 
 Config
 -------------------------------------
 Enable prompts in cpu or gpu intensive programs 
 
+sound slider in options ?
 
 Improvements 
 -------------------------------------

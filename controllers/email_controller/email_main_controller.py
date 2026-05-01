@@ -36,7 +36,7 @@ class Email_Main_Controller():
         while True:
             await self.connect()
             messages, something_was_announced = await self.get_emails('Google', 'INBOX')
-        
+           
             if messages:
                 found_keywords, occurences = await are_keywords_in_messages(messages, self.keywords.keys())
                 if found_keywords:
@@ -48,8 +48,9 @@ class Email_Main_Controller():
                         occurences[k] = self.keywords[k]
                     self.window.keywords_updater.reload_requested.emit()
 
-
+   
                     await save_terms(occurences=occurences)
+
 
             await asyncio.sleep(1800)
 
@@ -138,12 +139,12 @@ class Email_Main_Controller():
             
             if need_reload:
                 self.window.watchlist_worker.reload_requested.emit()
-                to_announce = [m for m in intent_emails]
-                await self.vocal_handler.announce_messages(to_announce)
+              
+                await self.vocal_handler.announce_messages(intent_emails)
 
             return emails, need_reload
                 
-        return None
+        return None, False
 
 
 ## DATA[0] : [b'FLAGS', b'(\\Answered', b'\\Flagged', b'\\Draft', b'\\Deleted', b'\\Seen', b'$NotPhishing', b'$Phishing)']

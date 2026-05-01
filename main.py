@@ -77,18 +77,14 @@ async def proximity_loop():
     if not device_controller.address:
         await device_controller.scan_and_save()
         device_controller.address = device_controller.best_rssi
-    await asyncio.sleep(3)    
+      
     while True:
 
         await device_controller.proximity_scan()
         await resource_controller.check_load()
         vocal_handler.is_operating_hours()
        
-   
-                                                      ## Will anounce in 5 minutes if prompt_active
-        if device_controller.user_is_near and not resource_controller.busy and not vocal_handler.prompt_active:
-            await vocal_handler.last_asked_for_keywords()
-            await vocal_handler.handle_pending_events()
+        await vocal_handler.handle_pending_events()
 
    
         await asyncio.sleep(300)  
@@ -126,6 +122,7 @@ def agentThread():
 #****************** MAIN **********************************************************
 
 async def agentAsync():
+    await asyncio.sleep(4)
     await asyncio.gather(email_controller.get_messages())
 
 

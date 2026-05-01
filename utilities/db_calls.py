@@ -120,17 +120,20 @@ async def get_pending_events(cur):
 
 
 @with_sqlite3
-async def mark_emails_read(cur, emails:list, err_str='Error inserting read email in the database:'):
+async def mark_emails_read(cur, emails:dict, err_str='Error inserting read email in the database:'):
     now = datetime.now().isoformat()
 
-    for e in emails:
-        subject = e['subject']
-        id = e['id']
-        intent = json.dumps(list(e['tags']))
-        sender = e['sender']
-   
-        await cur.execute("""INSERT OR IGNORE INTO emails(date, id, subject, tags , sender) VALUES (?,?,?,?,?)""",
-                    [now, id, subject, intent, sender])
+    for sender, mail in emails.items():
+        for e in mail:
+            subject = e['subject']
+            id = e['id']
+           
+            intent = json.dumps(list(e['tags'])) if e['tags'] else None
+    
+            sender = e['sender']
+    
+            await cur.execute("""INSERT OR IGNORE INTO emails(date, id, subject, tags , sender) VALUES (?,?,?,?,?)""",
+                        [now, id, subject, intent, sender])
 
 
 

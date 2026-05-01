@@ -52,7 +52,7 @@ class KeyWordsList(QListWidget):
        
 
         widget = ListWidget(name, value, self.menu, item)
-        item.setSizeHint(QSize(0, 90))
+        item.setSizeHint(QSize(0, 110))
 
         self.addItem(item)
         
@@ -85,7 +85,7 @@ class ListWidget(QWidget):
         self.widget_item = widget_item
         layout = QHBoxLayout()
         self.setLayout(layout)
-        self.setMinimumHeight(90)
+        self.setMinimumHeight(110)
         self.setAttribute(Qt.WidgetAttribute.WA_StyledBackground, True)
         self.setObjectName('list_item')
      

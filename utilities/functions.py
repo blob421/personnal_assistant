@@ -68,19 +68,25 @@ async def make_announcements(keywords:dict, notif_engine, GUI_link):
 
         aggregated[keyword].append(sender)
 
+    items_length = len(aggregated.keys())
     for idx, (k, senders) in enumerate(aggregated.items()):
-            senders_string = ', '.join(senders)
-
+            senders = set(s for s in senders)
+            senders_string = '\n'.join(senders)
+        
             if idx == 0:
-                full_string = f'The keyword {k} was found in messages sent by {senders_string}'
-            else:
-                full_string = f', the keyword {k} was found in mails coming from {senders_string}'
+                full_string = f'The keywords {k}' if items_length > 1 else f'The keyword {k} was found in your mail'
 
-            notif_engine.notify('Keyword found', 
-                                     f'the keyword {k} was found in mails coming from {senders_string}')
+            elif idx == items_length - 1:
+                 full_string = f'and {k} were found in your mail'
+            else:
+               
+                full_string = f', {k}'
+
+            notif_engine.notify(f'Keyword found : {k}', 
+                                     f'Source: {senders_string}')
             
             announcements.append(full_string)
-            await save_event('Keywords found', full_string)
+            await save_event('Keyword found', f'Keyword: {k}\nSource: \n{senders_string}')
             
     GUI_link.reload_requested.emit()
 

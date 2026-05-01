@@ -2,13 +2,12 @@ from textblob import TextBlob
 from textblob_fr import PatternTagger, PatternAnalyzer
 from controllers.email_controller.intent_words import GOOD_WORDS, BAD_WORDS, URGENT_WORDS, HOSTILE_WORDS
 import json
-
+from collections import defaultdict
 async def get_intent(emails, controller):
-    intent_emails = []
+    intent_emails = defaultdict(list)
     reload = False
     for e in emails:
         if not e['sender'] in controller.watchlist:
-            intent_emails.append({**e, 'tags': None})
             continue
 
         reload = True
@@ -18,7 +17,7 @@ async def get_intent(emails, controller):
         elif score > 0 :
             tags.add('good')
 
-        intent_emails.append({**e, 'tags': tags})
+        intent_emails[e['sender']].append({**e, 'tags': tags})
 
     return intent_emails, reload
 
