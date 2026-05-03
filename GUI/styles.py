@@ -288,7 +288,15 @@ styles = {
                      font-size:20px;
                     }
  
- """
+ """,
+
+ 'movie': """
+             #movie_box {
+             background-color: blue;
+             }
+
+
+          """
 
 
     

@@ -4,16 +4,17 @@ import ctypes
 import sys
 import asyncio
 import threading
-from datetime import datetime, timedelta
 
 from controllers.email_controller.email_main_controller import Email_Main_Controller
 from controllers.bluetooth.controller import Device_Controller
 from controllers.ressource_controller.controller import Ressource_Controller
 from controllers.Sound.vocal_interactions import Vocal_Handler
-from controllers.timer.timer import Timer
-from utilities.db_calls import (load_keywords, get_logged_events, init_db, load_options)
+from controllers.main_controller import MainController
 
-import config
+from utilities.db.async_calls import (load_keywords, load_options)
+from utilities.db.init_tables import init_db
+
+import config as config
 
 
 from PyQt6.QtWidgets import QApplication
@@ -31,48 +32,28 @@ is_windows_os = sys.platform.startswith("win")
 
 async def init():
     
-    global email_controller, keywords, time_until_next_prompt, resource_controller, vocal_handler, device_controller, OPTIONS
+    global resource_controller, vocal_handler, device_controller, Async_Worker
 
 
     await init_db()
     config.OPTIONS = await load_options()
     set_scaling()
     
-    now = datetime.now()
-    last_prompt = await get_logged_events("'Daily prompt'")
-    
-    if last_prompt:
-     
-        last_prompt = datetime.fromisoformat(last_prompt[1])
-        next_prompt = last_prompt + timedelta(days=1)
-        time_remaining = (next_prompt - now).total_seconds()
-     
- 
-        time_until_next_prompt = 5 if time_remaining < 0 else time_remaining + 5
-    
-    else: 
-
-        time_until_next_prompt = 5
-    
-
-
     resource_controller = Ressource_Controller()
     device_controller = Device_Controller()
 
     keywords = await load_keywords()
-    timer = Timer()
-    vocal_handler = Vocal_Handler(is_windows_os, device_controller, resource_controller, keywords, timer)
-    email_controller = Email_Main_Controller(config.CONFIRMED_PROVIDERS, vocal_handler, keywords)
+ 
+    vocal_handler = Vocal_Handler(is_windows_os, keywords)
+    email_controller = Email_Main_Controller(config.CONFIRMED_PROVIDERS)
+    Async_Worker = MainController(email_controller, vocal_handler, device_controller, resource_controller)
 
-    
-    
-    
 
 ######################################## LOOPS ############################################
 
 async def proximity_loop():
     
-    global resource_controller, device_controller, vocal_handler
+    global resource_controller, device_controller, Async_Worker
 
     if not device_controller.address:
         await device_controller.scan_and_save()
@@ -82,9 +63,9 @@ async def proximity_loop():
 
         await device_controller.proximity_scan()
         await resource_controller.check_load()
-        vocal_handler.is_operating_hours()
-       
-        await vocal_handler.handle_pending_events()
+        Async_Worker.timer.is_operating_hours()
+     
+        await Async_Worker.handle_pending_events()
 
    
         await asyncio.sleep(300)  
@@ -98,7 +79,7 @@ async def GUI_loop():
 
     window = MainWindow(config.OPTIONS, vocal_handler)
     vocal_handler.window = window
-    email_controller.window = window
+    Async_Worker.gui = window
     window.show()
     window.show_screen('watch list')
 
@@ -123,7 +104,10 @@ def agentThread():
 
 async def agentAsync():
     await asyncio.sleep(4)
-    await asyncio.gather(email_controller.get_messages())
+    while True:
+        await Async_Worker.process_mail()
+        await asyncio.sleep(1800)
+
 
 
 async def main():

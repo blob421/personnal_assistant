@@ -1,12 +1,9 @@
-from PyQt6.QtWidgets import (QWidget, QPushButton, QVBoxLayout, QLabel, QCheckBox, QHBoxLayout,
-                             QTimeEdit,  QScrollArea)
-
-from GUI.styles import styles
-from PyQt6.QtCore import QTime, Qt
-from .options import SilentMode, OperatingHours, EnableNotif, FontScaling
+from PyQt6.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QScrollArea)
+from PyQt6.QtCore import Qt
+from .options import SilentMode, OperatingHours, EnableNotif, Slider
 from .widgets import SaveButton
-import config
-from utilities.db_calls import save_options
+import config as config
+from utilities.db.sync_calls import save_options
 from GUI.titles import Title
 
 class Options(QWidget):
@@ -27,7 +24,8 @@ class Options(QWidget):
         self.option_1 = OperatingHours(self.settings, 'operating_hours_cont', 'Operating Hours')
         self.option2 = SilentMode('options_container', 'Silent mode (pauses vocal prompts)')
         self.o_notif = EnableNotif('options_container', 'Enable system notifications')
-        self.o_font_scaling = FontScaling('options_container', 'Font size scaling')
+        self.o_font_scaling = Slider('options_container', 'Font size scaling', 60, 'font_scaling')
+        self.sound_level = Slider('options_container', 'Sound level', 0, 'sound_level')
       
         scroll = QScrollArea()
         scroll.setWidgetResizable(True)
@@ -38,15 +36,13 @@ class Options(QWidget):
         container.setObjectName('options_box')
         scroll_layout = QVBoxLayout(container)
 
-
        
-        empty_block = QWidget()
         # Add widgets to the layout
         scroll_layout.addWidget(self.option_1)
         scroll_layout.addWidget(self.option2)
         scroll_layout.addWidget(self.o_notif)
         scroll_layout.addWidget(self.o_font_scaling)
-        scroll_layout.addWidget(empty_block)
+        scroll_layout.addWidget(self.sound_level)
      
         
 
@@ -75,6 +71,7 @@ class Options(QWidget):
         config.OPTIONS['silent_mode'] = self.option2.checkbox.isChecked()
         config.OPTIONS['notifications'] = self.o_notif.checkbox.isChecked()
         config.OPTIONS['font_scaling'] = str(self.o_font_scaling.widget.value() / 100)
+        config.OPTIONS['sound_level'] = str(self.sound_level.widget.value() / 100)
         print('Calling save')
         save_options()
 

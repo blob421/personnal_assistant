@@ -4,7 +4,7 @@ from GUI.styles import styles
 from GUI.home.prompt_history import Prompt_label
 from PyQt6.QtCore import Qt, QSize
 
-from utilities.db_calls import delete_keyword, add_keyword_gui
+from utilities.db.sync_calls import delete_keyword, add_keyword_gui
 
 
 class KeywordsMenu(QWidget):

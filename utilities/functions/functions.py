@@ -1,6 +1,6 @@
 import re
 import spacy
-from utilities.db_calls import get_pending_events, save_event
+from ..db.async_calls import get_pending_events, save_event
 from collections import defaultdict
 nlp = spacy.load("en_core_web_sm")
 

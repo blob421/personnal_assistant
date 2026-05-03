@@ -4,7 +4,7 @@ from GUI.styles import styles
 from GUI.home.prompt_history import Prompt_label
 from PyQt6.QtCore import Qt, QSize
 
-from utilities.db_calls import delete_keyword, add_keyword_gui, add_contact, load_contacts, delete_contact
+from utilities.db.sync_calls import delete_keyword, add_keyword_gui, add_contact, load_contacts, delete_contact
 from PyQt6.QtWidgets import QAbstractItemView
 
 

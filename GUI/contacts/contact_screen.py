@@ -3,7 +3,7 @@ from PyQt6.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QLabel, QListWid
 from PyQt6.QtCore import Qt
 from GUI.titles import Title
 from GUI.components.right_menu import RightMenu
-from utilities.db_calls import get_watchlist_messages, load_contacts_ref
+from utilities.db.sync_calls import get_watchlist_messages, load_contacts_ref
 from GUI.styles import styles
 from datetime import datetime
 

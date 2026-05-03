@@ -1,10 +1,19 @@
 from datetime import datetime, timedelta
-import config
+import config as config
 
 class Timer():
     def __init__(self):
         self.gui_refresh_due = False
         self.last_gui_refresh = None
+        self.operating_hours = True
+
+    def is_operating_hours(self):
+        self.operating_hours = self.hour_match()
+        
+        if self.gui_refresh_due:
+            self.last_gui_refresh = datetime.now()
+            self.gui_refresh_due = False
+
 
     def hour_match(self):
         current_time = datetime.now()

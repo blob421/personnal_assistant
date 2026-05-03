@@ -1,65 +1,37 @@
 from .email_auth_manager import Email_Auth_Manager
-
-from .extract_email import extract_mail
+from utilities.functions.extract_email import extract_mail
 import aioimaplib
 import logging
-from utilities.db_calls import mark_emails_read, email_was_processed, load_contacts_async, save_terms
-from utilities.functions import extract_gmail_msgid, are_keywords_in_messages
-from controllers.email_controller.get_intent import get_intent
+from utilities.db.async_calls import email_was_processed
+from utilities.functions.functions import extract_gmail_msgid
 import asyncio
-
-logger = logging.getLogger(__name__)
 import os 
+from datetime import datetime
+
+############ LOGGING ######################################################################
+logger = logging.getLogger(__name__)
 current_dir = os.path.dirname(__file__)
 log_path = os.path.abspath(os.path.join(current_dir, '../../logs/email_controller.log'))
 
 logging.basicConfig(filename=log_path, level=logging.INFO)
 
-from datetime import datetime
+###########################################################################################
 
 class Email_Main_Controller():
 
-    
-    def __init__(self, providers, vocal_handler, keywords):
+    def __init__(self, providers):
        self.auth_managers = {}
-       self.keywords = keywords
        self.providers = providers
-       self.vocal_handler = vocal_handler
-       self.watchlist = None
        self.create_auth_managers()
-       self.window = None
-    
-      
-
-    async def get_messages(self):
-    
-        while True:
-            await self.connect()
-            messages, something_was_announced = await self.get_emails('Google', 'INBOX')
-           
-            if messages:
-                found_keywords, occurences = await are_keywords_in_messages(messages, self.keywords.keys())
-                if found_keywords:
-                    await self.vocal_handler.last_asked_for_keywords()
-                    await self.vocal_handler.announce_keyword_found(found_keywords, intro = not something_was_announced)
-                if occurences:
-                    for k, v in occurences.items():
-                        self.keywords[k] += v
-                        occurences[k] = self.keywords[k]
-                    self.window.keywords_updater.reload_requested.emit()
-
-   
-                    await save_terms(occurences=occurences)
-
-
-            await asyncio.sleep(1800)
-
+     
 
     def create_auth_managers(self):
        
        for p in self.providers:
           self.auth_managers[p] = {'manager': Email_Auth_Manager(p), 'imap': None}
           
+
+
     async def connect(self):
        
        for provider, auth_manager in self.auth_managers.items():
@@ -132,19 +104,11 @@ class Email_Main_Controller():
                 # imap.store(msg_id, '+FLAGS', '\\Seen') Mark then as seen
 
         await imap.logout()
-        if len(emails) > 0:
-            self.watchlist = await load_contacts_async()
-            intent_emails, need_reload = await get_intent(emails, self)
-            await mark_emails_read(intent_emails)
-            
-            if need_reload:
-                self.window.watchlist_worker.reload_requested.emit()
-              
-                await self.vocal_handler.announce_messages(intent_emails)
 
-            return emails, need_reload
-                
-        return None, False
+        if len(emails) > 0:
+            return emails
+        
+        return None
 
 
 ## DATA[0] : [b'FLAGS', b'(\\Answered', b'\\Flagged', b'\\Draft', b'\\Deleted', b'\\Seen', b'$NotPhishing', b'$Phishing)']

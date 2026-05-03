@@ -10,7 +10,8 @@ from .sound_utilities import add_silence
 
 from scipy.signal import resample
 from config import DB_PATH, PROCESS_NAME
-from pulsectl import Pulse, PulseVolumeInfo
+import config as config
+from pulsectl import Pulse
 import sys
 current_dir = os.path.dirname(__file__)
 model_path = os.path.join(current_dir, "Amy", "en_US-amy-medium.onnx")
@@ -40,13 +41,24 @@ class SoundEngine():
             for session in sessions:
                 if session.Process and session.Process.name().lower() != PROCESS_NAME.lower():
                     session.SimpleAudioVolume.SetMasterVolume(level, None)
+                else:
+                    session.SimpleAudioVolume.SetMasterVolume(float(config.OPTIONS['sound_level']))
         else:
             with Pulse('volume-example') as pulse:
                 sink_inputs = pulse.sink_input_list()
                 for el in sink_inputs:
 
+                    app = el.proplist.get("application.process.binary", "").lower()
+
                     volume = el.volume
-                    volume.value_flat = level
+
+                    if app == PROCESS_NAME.lower():
+                    
+                        volume.value_flat = float(config.OPTIONS['sound_level'])
+                    else:
+                  
+                        volume.value_flat = level
+
                     pulse.volume_set(el, volume)
 
     

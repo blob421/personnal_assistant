@@ -1,7 +1,7 @@
 from textblob import TextBlob
 from textblob_fr import PatternTagger, PatternAnalyzer
-from controllers.email_controller.intent_words import GOOD_WORDS, BAD_WORDS, URGENT_WORDS, HOSTILE_WORDS
-import json
+from utilities.words.intent_words import GOOD_WORDS, BAD_WORDS, URGENT_WORDS, HOSTILE_WORDS
+
 from collections import defaultdict
 async def get_intent(emails, controller):
     intent_emails = defaultdict(list)

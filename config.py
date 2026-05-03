@@ -17,7 +17,8 @@ default_options = {
                    'silent_mode': False,
                    'notifications': True,
                    'font_scaling': '0.9',
-                   'window_size': '1400:750'
+                   'window_size': '1400:750',
+                   'sound_level' : '0.7'
                    }
 
 OPTIONS = {}

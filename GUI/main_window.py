@@ -5,12 +5,11 @@ from GUI.left_menu import Left_Menu
 from GUI.contacts.contact_screen import ContactScreen
 from GUI.home.main_screen import Home
 from GUI.options.options_screen import Options
-from utilities.db_calls import save_options
-import config
+from GUI.movie.screen import MovieScreen
+from utilities.db.sync_calls import save_options
+import config as config
 
-
-from GUI.styles import styles
-from PyQt6.QtCore import QObject, pyqtSignal, Qt, QTimer
+from PyQt6.QtCore import QObject, pyqtSignal, QTimer
 from PyQt6.QtWidgets import QSpacerItem, QSizePolicy
 ### Layout => Widgets
 ### Layout => Layout with widgets
@@ -80,7 +79,7 @@ class MainWindow(QMainWindow):
         self.right_screen = QStackedWidget()
         
         self.screens = {'home': Home(self, vocal_handler), 'options': Options(options), 
-                        'watch list': ContactScreen(vocal_handler) }
+                        'watch list': ContactScreen(vocal_handler), 'movie': MovieScreen() }
       
         for _ ,v in self.screens.items():
             self.right_screen.addWidget(v)

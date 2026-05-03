@@ -1,5 +1,5 @@
 from notifypy import Notify
-import config
+import config as config
 import os
 icon_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '../../', 'GUI', 'assets', 'logo.png'))
 class notif_controller():

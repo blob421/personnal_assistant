@@ -1,7 +1,7 @@
 
 from PyQt6.QtWidgets import (QLabel, QListWidget, QWidget, QVBoxLayout, QHBoxLayout, QListWidgetItem)
 from PyQt6.QtCore import Qt, QSize
-from utilities.db_calls import get_events_gui
+from utilities.db.sync_calls import get_events_gui
 from GUI.styles import styles
 from datetime import datetime
 

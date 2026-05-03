@@ -1,10 +1,6 @@
-import asyncio
-from bleak import BleakScanner, BleakClient
+from bleak import BleakScanner
 import sqlite3
-import os
 import contextlib
-import traceback
-import threading
 from config import DB_PATH
 
 class Device_Controller:

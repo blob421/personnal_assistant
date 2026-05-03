@@ -1,6 +1,6 @@
 import re
 import GUI.styles as styles
-import config
+import config 
 
 scaling = None
 
