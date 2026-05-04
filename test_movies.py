@@ -1,27 +1,14 @@
 import asyncio
-from controllers.movies.controller import MovieController
-from controllers.movies.db_calls import save_movie
+from controllers.movies.movie_controller import Movie_Controller
 from utilities.db.init_tables import init_db
+from controllers.movies.db_calls import save_liked_movie_terms
 
-
-
-
-async def fetch_movies(controller:MovieController):
-    await controller.create_client()
-
-    generator = await controller.make_imdbId_generator(pages=1, 
-                                                       genres=['horror', 'crime', 'sci-fi'])
-    async for movie in generator:
-         await save_movie(movie)
-
-    await controller.terminate_client()
 
 
 async def main():
     await init_db()
-
-    controller = MovieController()
-    await fetch_movies(controller)
-  
+    controller = Movie_Controller()
+    await controller.init_best_movies()
+    print(controller.best_movies)
 
 asyncio.run(main())

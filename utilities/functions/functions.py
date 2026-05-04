@@ -28,7 +28,7 @@ async def are_keywords_in_messages(messages:list, keywords:list):
 
 def extract_nouns(text):
     doc = nlp(text)
-    return [token.text for token in doc if token.pos_ in ("NOUN", "PROPN")]
+    return set(token.text for token in doc if token.pos_ in ("NOUN", "PROPN"))
 
 
 

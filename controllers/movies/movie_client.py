@@ -2,7 +2,7 @@ import config as config
 import json
 import os
 from aiohttp import ClientSession
-from .db_calls import movie_fillup_due, get_movies_count
+from .db_calls import movie_fillup_due
 import asyncio
 from controllers.movies.db_calls import save_imdb_id
 
@@ -28,17 +28,17 @@ db_string = config.DB_PATH
 
 
 
-class MovieController():
+class Movie_Client():
     def __init__(self):
         self.suggested = []
         self.fill_up_due = False
         self.session = None
       
 
-    async def create_client(self):
+    async def create_session(self):
         self.session = ClientSession()
 
-    async def terminate_client(self):
+    async def terminate_session(self):
         await self.session.close()
     
     async def is_fillup_due(self):

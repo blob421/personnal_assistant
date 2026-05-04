@@ -49,12 +49,18 @@ async def init_db(cur, err_str='Error creating tables during init'):
                                                             plot TEXT,
                                                             genres VARCHAR(60),
                                                             seen BOOLEAN DEFAULT false,
-                                                            liked BOOLEAN DEFAULT false
+                                                            liked BOOLEAN DEFAULT false,
+                                                            interested BOOLEAN DEFAULT true
 
                       )""")
     
     await cur.execute("""CREATE INDEX IF NOT EXISTS movie_seen_idx on movies(seen)""")
     await cur.execute("""CREATE INDEX IF NOT EXISTS movie_imdbId_idx on movies(imdbId)""")
+    await cur.execute("""CREATE INDEX IF NOT EXISTS movie_interest_idx on movies(interested)""")
+
+    await cur.execute("""CREATE VIRTUAL TABLE IF NOT EXISTS movie_terms USING fts5(term, 
+                                                                     score, 
+                                                                     tokenize = 'trigram')""")
 
     await cur.execute("""SELECT * FROM options""")
 
