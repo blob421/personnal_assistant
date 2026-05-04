@@ -8,7 +8,6 @@ import numpy as np
 import sounddevice as sd
 from .sound_utilities import add_silence
 
-from scipy.signal import resample
 from config import DB_PATH, PROCESS_NAME
 import config as config
 from pulsectl import Pulse

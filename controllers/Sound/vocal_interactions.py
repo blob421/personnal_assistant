@@ -1,10 +1,9 @@
 
-from utilities.functions.functions import make_announcements, extract_nouns
+from utilities.functions.functions import extract_nouns
 from utilities.db.async_calls import delay_event
 
 from utilities.words.exceptions import EXCEPT_NOUNS
 
-from controllers.notifications.controller import notif_controller
 from .sound_engine import SoundEngine
 import asyncio
 import config as config
@@ -17,10 +16,7 @@ class Vocal_Handler():
         self.prompt_active = False
         self.prompted_recently = False
         self.keywords = keywords
-        self.notif_engine = notif_controller()
-
         self.contacts = {}
-
 
 
     def play_sound(self, string):
@@ -29,8 +25,6 @@ class Vocal_Handler():
         self.sound_engine.play_sound()
         
     
-
-
     @staticmethod
     def manage_sound(fn):
         async def wrapper(self, *args, **kwargs):
@@ -44,6 +38,7 @@ class Vocal_Handler():
             
         return wrapper
     
+
 
     @manage_sound
     async def prompt_for_terms(self, near=True):
@@ -110,17 +105,11 @@ class Vocal_Handler():
 
 
    
-
-
-    
     @manage_sound
-    async def announce_keyword_found(self, keywords:dict, gui, near=True, intro=True):
+    async def announce_keyword_found(self, announcements, near=True, intro=True):
         
-        announcements = await make_announcements(keywords, self.notif_engine, gui)
-       
         if config.OPTIONS['silent_mode']: return 
    
-
         if near and not self.prompt_active:
 
             if intro:
@@ -153,7 +142,7 @@ class Vocal_Handler():
                 
   
     @manage_sound
-    async def announce_messages(self, messages:dict, near=True):
+    async def announce_messages(self, notif_engine, messages:dict, near=True):
 
         if near:
             self.sound_engine.play_sound(prompt=True)
@@ -202,7 +191,7 @@ class Vocal_Handler():
                 
        
 
-            self.notif_engine.notify(title='Watchlist event', message=m_string)
+            notif_engine.notify(title='Watchlist event', message=m_string)
  
             if not near:
                 await delay_event(message=m_string, type='watch list')

@@ -41,20 +41,20 @@ async def init_db(cur, err_str='Error creating tables during init'):
                                                              active BOOLEAN
                                                              )""")
     
-    await cur.execute("""CREATE TABLE IF NOT EXISTS movies(id BIGINT,
+    await cur.execute("""CREATE TABLE IF NOT EXISTS movies(id INTEGER PRIMARY KEY,
                                                             title VARCHAR(60),
                                                             year VARCHAR(10),
                                                             imdbId VARCHAR(20),
                                                             poster TEXT,
-                                                            synopsis TEXT,
-                                                            genre VARCHAR(60),
-                                                            image BLOB,
-                                                            seen BOOLEAN,
-                                                            liked BOOLEAN
+                                                            plot TEXT,
+                                                            genres VARCHAR(60),
+                                                            seen BOOLEAN DEFAULT false,
+                                                            liked BOOLEAN DEFAULT false
 
                       )""")
     
     await cur.execute("""CREATE INDEX IF NOT EXISTS movie_seen_idx on movies(seen)""")
+    await cur.execute("""CREATE INDEX IF NOT EXISTS movie_imdbId_idx on movies(imdbId)""")
 
     await cur.execute("""SELECT * FROM options""")
 

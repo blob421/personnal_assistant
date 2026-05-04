@@ -3,7 +3,9 @@ from utilities.functions.functions import are_keywords_in_messages
 from utilities.db.async_calls import (get_logged_events, save_terms, load_contacts_async, 
                                       mark_emails_read, save_event)
 from utilities.functions.get_intent import get_intent
-from utilities.functions.functions import extract_pending_prompts
+from utilities.functions.functions import extract_pending_prompts, make_announcements
+
+from controllers.notifications.controller import notif_controller
 from controllers.timer.timer import Timer
 import asyncio
 from datetime import datetime, timedelta
@@ -11,10 +13,12 @@ from datetime import datetime, timedelta
 class MainController():
 
     def __init__(self, email_controller, vocal_handler, device_controller, resource_controller):
+        
         self.email_controller = email_controller
         self.vocal_handler = vocal_handler
         self.device_controller = device_controller
         self.resource_controller=  resource_controller
+        self.notif_engine = notif_controller()
         self.timer = Timer()
         self.gui = None
         self.keyword_prompt_due = False
@@ -63,9 +67,9 @@ class MainController():
             found_keywords, occurences = await are_keywords_in_messages(processed, 
                                                                         self.vocal_handler.keywords.keys())
             if found_keywords:
-                await self.vocal_handler.announce_keyword_found(found_keywords, 
-                                                                intro = not something_was_announced, 
-                                                                gui=self.gui, near=near)
+                announcements = await make_announcements(found_keywords, self.notif_engine, self.gui)
+                await self.vocal_handler.announce_keyword_found(announcements, near, 
+                                                                not something_was_announced)
                 
             if occurences:
                 for k, v in occurences.items():
@@ -89,7 +93,7 @@ class MainController():
             if need_reload:
                 self.gui.watchlist_worker.reload_requested.emit()
               
-                await self.vocal_handler.announce_messages(intent_emails, near=near)
+                await self.vocal_handler.announce_messages(self.notif_engine, intent_emails, near)
 
             return emails, need_reload
                 
