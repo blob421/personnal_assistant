@@ -3,12 +3,12 @@ My personnal and everyday vocal assistant.
 It can :
 
 - Parse mail
-- Detect proximity via bluetooth
-- Prompt for search terms.
+- Detect proximity via bluetooth and get cpu load 
 - Delay prompts and announcements until users are nearby.
+- Analyze intent of messages and watch specific email addresses.
 - Announce and send notifications if something was found while parsing mail.
 - Has a GUI with options 
-- Movie suggestions and scoring system
+- Suggest movies and has a scoring system for recommendations.
 
 
 Requirements:
