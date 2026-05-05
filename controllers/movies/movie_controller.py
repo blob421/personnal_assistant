@@ -18,6 +18,7 @@ class Movie_Signals(QObject):
     liked = pyqtSignal()
     seen = pyqtSignal()
     interested = pyqtSignal()
+    scramble = pyqtSignal()
 
     def __init__(self, controller):
         super().__init__()
@@ -25,6 +26,7 @@ class Movie_Signals(QObject):
         self.liked.connect(self.handle_like)
         self.seen.connect(self.handle_seen)
         self.interested.connect(self.handle_interest)
+        self.scramble.connect(self.handle_scramble)
         
     def handle_like(self):
       self.controller.loop.call_soon_threadsafe(
@@ -42,7 +44,8 @@ class Movie_Signals(QObject):
          self.controller.loop.call_soon_threadsafe(
             asyncio.create_task, self.controller.mark_interested())
         
-
+    def handle_scramble(self):
+        self.controller.loop.call_soon_threadsafe(asyncio.create_task, self.controller.select_best_movies())
 
 class Movie_Controller():
     def __init__(self):
@@ -75,6 +78,7 @@ class Movie_Controller():
             time = datetime.fromisoformat(last_event[1])
             if not datetime.now() - time > timedelta(days=1):
                 self.best_movies = await get_movies_by_id(json.loads(last_event[3]))
+                
                 return
         
         await self.select_best_movies()
@@ -105,12 +109,14 @@ class Movie_Controller():
 
     async def select_best_movies(self):
         movies:dict = await get_unseen_movies()
+        print(movies)
 
         scored_movies = {}
      
         for id, m in movies.items():
          
-
+            if not m.get('title') or not m.get('plot'):
+                continue
             title_nouns:set = extract_nouns(m['title'].lower())
             plot_nouns:set = extract_nouns(m['plot'].lower())
             for w in plot_nouns.union(title_nouns):
@@ -120,10 +126,12 @@ class Movie_Controller():
                 match = await match_movie_term(w)
                 if match:
                     scored_movies[id] = scored_movies.get(id, 0) + match[1]
+              
            
 
         print(scored_movies)
         best = []
+        print('Went here')
 
         if scored_movies:
             for i in range(3):
@@ -135,9 +143,14 @@ class Movie_Controller():
         else:
             best = random.sample(list(movies.keys()), 3)
 
+        for m in self.best_movies:
+            id = m['imdbId']
+            os.remove(os.path.join(config.POSTERS_PATH, f'{id}.jpg'))
+            
         self.best_movies = await get_movies_by_id(best)
         await self.save_posters()
         await save_event('Movie update', json.dumps([i for i in best]))
+        self.gui.movie_worker.reload_requested.emit()
 
 
     ############################# GUI BUTTONS #######################################

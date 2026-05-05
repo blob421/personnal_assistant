@@ -113,16 +113,21 @@ class Movie_Buttons_Widget(QWidget):
         self.layout = QVBoxLayout()
         self.setLayout(self.layout)
         self.parent = parent
-        self.layout.setAlignment(Qt.AlignmentFlag.AlignTop)
+      
 
         self.like_btn = Movie_Button('liked', parent, self)
         self.seen_btn = Movie_Button('seen', parent, self)
         self.not_interested = Movie_Button('interested', parent, self)
-
+        
        
+        self.layout.stretch(1)
         self.layout.addWidget(self.like_btn)
         self.layout.addWidget(self.seen_btn)
         self.layout.addWidget(self.not_interested)
+        self.scramble = QPushButton('Scramble')
+        self.scramble.setObjectName('scramble')
+        self.scramble.clicked.connect(self.parent.parent.master.movie_controller.signals_worker.scramble.emit)
+        self.layout.addWidget(self.scramble, alignment=Qt.AlignmentFlag.AlignBottom)
         
 
     def switch_interest(self):

@@ -310,7 +310,9 @@ styles = {
              #seen {
               background-color: lightgreen; font-size: 25px; margin-bottom:12px; color: black;
              }
-
+             #scramble {
+              font-size: 29px;
+             }
              #movie_content {
              font-size: 22px;
              }

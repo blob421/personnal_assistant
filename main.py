@@ -72,7 +72,7 @@ async def proximity_loop():
         await Async_Worker.handle_pending_events()
 
    
-        await asyncio.sleep(300)  
+        await asyncio.sleep(300)
        
         
 
@@ -89,6 +89,7 @@ async def GUI_loop():
     Async_Worker.movie_controller.gui = window
     window.screens['home'].prompt_history.history_list.get_events()
     window.screens['movie'].movie_controller = movie_controller
+    Async_Worker.movie_controller.gui.movie_worker.reload_requested.emit()
 
     app.exec()
 
@@ -122,7 +123,7 @@ async def movies_loop():
     while True:
         await Async_Worker.movie_controller.movie_fillup_due()
         await Async_Worker.movie_controller.init_best_movies()
-        Async_Worker.movie_controller.gui.movie_worker.reload_requested.emit()
+        
         await asyncio.sleep(24 * 3600)
 
 async def agentAsync():

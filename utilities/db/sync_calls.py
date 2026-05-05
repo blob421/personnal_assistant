@@ -57,7 +57,8 @@ def add_keyword_gui(cur, term, err_str='Error inserting term in the database:'):
 
 @with_sqlite3_sync
 def get_events_gui(cur, err_str='Err fetching events from the db (gui)'):
-    cur.execute(f"""SELECT * FROM events WHERE message IS NOT NULL ORDER BY id DESC LIMIT 20""")
+    cur.execute(f"""SELECT * FROM events WHERE message IS NOT NULL AND TYPE 
+                                                       != 'Movie update' ORDER BY id DESC LIMIT 20""")
 
     results = cur.fetchall()
 
