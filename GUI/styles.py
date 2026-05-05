@@ -302,10 +302,13 @@ styles = {
              font-size: 26px; margin-bottom:12px;
              }
              #not_interested {
-             background-color:salmon;font-size: 25px;
+             background-color:salmon;font-size: 25px; color: black;
              }
              #liked {
-               background-color:lightblue;
+               background-color:lightblue; font-size: 25px; margin-bottom:12px; color: black;
+             }
+             #seen {
+              background-color: lightgreen; font-size: 25px; margin-bottom:12px; color: black;
              }
 
              #movie_content {

@@ -1,8 +1,8 @@
 
 from controllers.movies.movie_client import Movie_Client
-from controllers.movies.db_calls import (save_movie, get_unseen_movies, get_liked_terms, 
-                                         save_liked_movie_terms, get_movies_by_id, 
-                                         get_movie_by_id,
+from controllers.movies.db_calls import (save_movie, get_unseen_movies, 
+                                         save_liked_movie_terms, get_movies_by_id, like_movie,
+                                         not_interested_movie,descore_terms,
                                          match_movie_term, mark_seen)
 import random
 from utilities.functions.functions import extract_nouns, prefix
@@ -11,14 +11,59 @@ import json
 from datetime import datetime, timedelta
 import os
 import config
+from PyQt6.QtCore import pyqtSignal, QObject
+import asyncio
+
+class Movie_Signals(QObject):
+    liked = pyqtSignal()
+    seen = pyqtSignal()
+    interested = pyqtSignal()
+
+    def __init__(self, controller):
+        super().__init__()
+        self.controller:Movie_Controller = controller
+        self.liked.connect(self.handle_like)
+        self.seen.connect(self.handle_seen)
+        self.interested.connect(self.handle_interest)
+        
+    def handle_like(self):
+      self.controller.loop.call_soon_threadsafe(
+                            asyncio.create_task,
+                            self.controller.like_movie()
+                        )
+         
+    def handle_seen(self):
+         self.controller.loop.call_soon_threadsafe(       
+            asyncio.create_task, self.controller.mark_seen()
+            )
+      
+
+    def handle_interest(self):
+         self.controller.loop.call_soon_threadsafe(
+            asyncio.create_task, self.controller.mark_interested())
+        
 
 
 class Movie_Controller():
     def __init__(self):
+        self.loop = None
         self.client = Movie_Client()
         self.best_movies = []
+        self.gui = None
+        self.signals_worker = Movie_Signals(self)
+ 
+    @staticmethod
+    def client_needed(fn):
+        async def wrapper(self, *args, **kwargs):
+            try:
+                await self.client.create_session()
+                return await fn(self, *args, **kwargs)
+            
+            finally:
+                await self.client.terminate_session()
+        return wrapper
 
-        
+
     async def init_best_movies(self):
         last_event = await get_logged_events("'Movie update'", limit=1)
         if last_event:
@@ -29,10 +74,10 @@ class Movie_Controller():
         
         await self.select_best_movies()
         
-               
+
+    @client_needed
     async def save_posters(self):
-        await self.client.create_session()
-  
+
         for p in self.best_movies:
        
             async with self.client.session.get(p['poster']) as r:
@@ -40,20 +85,17 @@ class Movie_Controller():
                 with open(os.path.join(config.POSTERS_PATH, f'{p['imdbId']}.jpg'), 'wb') as pic:
                     pic.write(data)
 
-        await self.client.terminate_session()
 
 
+    @client_needed
     async def fetch_movies(self, pages=1):
-        await self.client.create_session()
-
         generator = await self.client.make_imdbId_generator(pages, 
                                                         genres=['horror', 'crime', 'sci-fi'])
         async for movie in generator:
             await save_movie(movie)
 
-        await self.client.terminate_session()
 
-    #### DO TRIGRAM SEARCH INSTEAD WITH prefix function faster
+
 
     async def select_best_movies(self):
         movies:dict = await get_unseen_movies()
@@ -90,19 +132,58 @@ class Movie_Controller():
         self.best_movies = await get_movies_by_id(best)
         await self.save_posters()
         await save_event('Movie update', json.dumps([i for i in best]))
-           
+
+
+    ############################# GUI BUTTONS #######################################
+
+    async def like_movie(self):
+    
+        movie_id, new_value = self.handle_gui_data('liked')
+    
+  
+        
+        movie = await get_movies_by_id([movie_id])
+        m = movie[0]
  
-    def like_movie(self, movie_id):
-        m = get_movie_by_id(movie_id)
-       
         nouns_title:set = extract_nouns(m['title'].lower())
         nouns = nouns_title.union(extract_nouns(m['plot'].lower()))
-                
-        save_liked_movie_terms(nouns)
 
-    async def mark_seen(self, movie_id):
-        await mark_seen(movie_id)
+        if new_value == False:
+            await descore_terms(terms=nouns)
+      
+        else:
+            await save_liked_movie_terms(nouns)
+  
+        await like_movie(id=movie_id, value=new_value)
 
+    async def mark_seen(self):
+        movie_id, new_value = self.handle_gui_data('seen')  
+        await mark_seen(id=movie_id, value=new_value)
+
+    async def mark_interested(self):
+        movie_id, new_value = self.handle_gui_data('interested')
+        if new_value == False:
+            movie = await get_movies_by_id([movie_id])
+            m = movie[0]
+ 
+            nouns_title:set = extract_nouns(m['title'].lower())
+            nouns = nouns_title.union(extract_nouns(m['plot'].lower()))
+            await descore_terms(terms=nouns)
+            
+        await not_interested_movie(id=movie_id, value=new_value)
+
+
+    def handle_gui_data(self, type):
+        index = self.gui.screens['movie'].MovieBox.poster_idx
+    
+        movie_id = self.best_movies[index]['imdbId']
+       
+        value = self.best_movies[index][type] 
+   
+ 
+        self.best_movies[index][type] = not value
+    
+        return movie_id, not value
 
         
         

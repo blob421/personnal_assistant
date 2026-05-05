@@ -7,6 +7,8 @@ import config
 import os 
 from controllers.movies.db_calls import not_interested_movie, like_movie
 
+
+
 class MovieScreen(QWidget):
     def __init__(self):
         super().__init__()
@@ -16,9 +18,7 @@ class MovieScreen(QWidget):
         layout.setContentsMargins(0, 0 , 0 ,0)
         self.setAttribute(Qt.WidgetAttribute.WA_StyledBackground)
         self.movie_controller = None
-        
-
-
+   
         self.title = Title('Movies')
         self.MovieBox = MovieBox(self)
         layout.addWidget(self.title, 1)
@@ -41,6 +41,7 @@ class MovieBox(QWidget):
         self.setObjectName('movie_box')
         self.setLayout(self.layout)
         self.movies = []
+      
         self.poster_idx = 0
 
     def add_item(self, item):
@@ -54,7 +55,7 @@ class MovieBox(QWidget):
             self.poster_idx = 0
         else: 
             self.poster_idx += 1
-      
+
         self.layout.addWidget(self.movies[self.poster_idx], 3)
         
   
@@ -65,6 +66,7 @@ class MovieBox(QWidget):
             if widget:
                 widget.setParent(None)
 
+
 class Movie_Item(QWidget):
     def __init__(self, movie, moviebox):
         super().__init__()
@@ -73,11 +75,11 @@ class Movie_Item(QWidget):
         self.setLayout(layout)
         self.movie = movie
    
-        
+        self.image_widget = Movie_Img_Widget(movie, moviebox)
         content_widget = Title_plot(movie)
         buttons_bar = Movie_Buttons_Widget(self)
        
-        self.image_widget = Movie_Img_Widget(movie, moviebox)
+     
         layout.addWidget(self.image_widget, 3)
         layout.addWidget(content_widget, 6)
         layout.addWidget(buttons_bar, 1)
@@ -112,61 +114,27 @@ class Movie_Buttons_Widget(QWidget):
         self.parent = parent
         self.layout.setAlignment(Qt.AlignmentFlag.AlignTop)
 
-        liked = self.parent.movie['liked']
-        text_like_btn = 'Like' if not liked else 'Liked'
-        class_like_btn = 'movie_side_btns' if not liked else 'liked'
-
-        self.like_btn = QPushButton(text_like_btn)
-        self.like_btn.clicked.connect(lambda: self.like_movie(parent.movie['imdbId']))
-        self.seen_btn = QPushButton('Seen')
-        self.seen_btn.clicked.connect(lambda: self.like_movie(parent.movie['imdbId']))
-
-        button_text = 'Interested' if parent.movie['interested'] else 'Not interested'
-        self.not_interested = QPushButton(button_text)
-
-        self.not_interested.clicked.connect(
-            lambda : self.switch_interest(parent.movie['imdbId']))
-        interest_btn_class = 'movie_side_btns' if parent.movie['interested'] else 'not_interested'
-
-        self.not_interested.setObjectName(interest_btn_class)
-        self.not_interested.setFixedWidth(200)
-        self.seen_btn.setFixedWidth(200)
-        self.like_btn.setFixedWidth(200)
-        self.like_btn.setObjectName(class_like_btn)
-        self.seen_btn.setObjectName('movie_side_btns')
+        self.like_btn = Movie_Button('liked', parent, self)
+        self.seen_btn = Movie_Button('seen', parent, self)
+        self.not_interested = Movie_Button('interested', parent, self)
 
        
         self.layout.addWidget(self.like_btn)
         self.layout.addWidget(self.seen_btn)
         self.layout.addWidget(self.not_interested)
         
-    def switch_interest(self, id):
-        index = self.parent.parent.poster_idx
-        interest =  self.parent.parent.master.suggestions[index]['interested']
-        self.parent.parent.master.suggestions[index]['interested'] = not interest
 
-        interest_btn_class = 'movie_side_btns' if not interest else 'not_interested'
-        button_text = 'Interested' if not interest else 'Not interested'
-        self.not_interested.setObjectName(interest_btn_class)
-        self.not_interested.setText(button_text)
-        self.not_interested.setStyle(self.style())
-        not_interested_movie(id, not interest)
+    def switch_interest(self):
+        self.not_interested.invert()
+        self.parent.parent.master.movie_controller.signals_worker.interested.emit()
         
-    def like_movie(self, id):
-        master = self.parent.parent.master
-        master.movie_controller.like_movie(id)
-        index = self.parent.parent.poster_idx
-        liked = master.suggestions[index]['liked']
-        self.parent.parent.master.suggestions[index]['liked'] = not liked
-       
-        text = 'Like' if liked else 'Liked'
-        classname = 'movie_side_btns' if liked else 'liked'
+    def like_movie(self):
+        self.like_btn.invert()
+        self.parent.parent.master.movie_controller.signals_worker.liked.emit()
 
-        self.like_btn.setText(text)
-        self.like_btn.setObjectName(classname)
-        self.like_btn.setStyle(self.style())
-        like_movie(not liked, id)
-
+    def handle_seen(self):
+        self.seen_btn.invert()
+        self.parent.parent.master.movie_controller.signals_worker.seen.emit()
 
 
 class MoveSuggestionWidget(QWidget):
@@ -224,3 +192,59 @@ class PosterLabel(QLabel):
 
         super().resizeEvent(event)
 
+
+class Movie_Button(QPushButton):
+    def __init__(self, type, movie_item, buttons_widget):
+        super().__init__()
+        self.type = type
+        self.movie_item = movie_item
+        self.setFixedWidth(200)
+        self.imdbId = movie_item.movie['imdbId']
+        self.option_idx = 1
+        self.class_options = {'liked': ['movie_side_btns', 'liked'], 
+                              'interested': ['movie_side_btns', 'not_interested'],
+                              'seen': ['movie_side_btns', 'seen']}
+        
+        self.text_options = {'liked': ['Like', 'Liked'], 
+                              'interested': ['Interested', 'Not Interested'],
+                              'seen': ['Not seen', 'Seen']}
+
+        if type == 'liked':
+            self.clicked.connect(buttons_widget.like_movie)
+            if not movie_item.movie['liked']:
+                self.option_idx = 0
+
+        elif type == 'interested':
+            self.clicked.connect(buttons_widget.switch_interest)
+
+            if movie_item.movie['interested']:
+                self.option_idx = 0
+
+
+        elif type == 'seen':
+            self.clicked.connect(buttons_widget.handle_seen)
+
+            if not movie_item.movie['seen']:
+                self.option_idx = 0
+           
+
+        self.text = self.text_options[type][self.option_idx]
+        self.setObjectName(self.class_options[type][self.option_idx])
+        self.setText(self.text)
+
+
+    def invert(self):
+   
+  
+        if self.option_idx == 0:
+            self.setText(self.text_options[self.type][1])
+            self.option_idx = 1
+            self.setObjectName(self.class_options[self.type][1])
+        else:
+            self.setText(self.text_options[self.type][0])
+            self.option_idx = 0
+            self.setObjectName(self.class_options[self.type][0])       
+                
+        self.setStyle(self.movie_item.style())
+
+    

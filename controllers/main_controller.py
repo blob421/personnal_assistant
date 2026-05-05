@@ -12,16 +12,19 @@ from datetime import datetime, timedelta
 
 class MainController():
 
-    def __init__(self, email_controller, vocal_handler, device_controller, resource_controller):
+    def __init__(self, email_controller, vocal_handler, device_controller, resource_controller,
+                 movie_controller):
         
         self.email_controller = email_controller
         self.vocal_handler = vocal_handler
+        self.movie_controller = movie_controller
         self.device_controller = device_controller
         self.resource_controller=  resource_controller
         self.notif_engine = notif_controller()
         self.timer = Timer()
         self.gui = None
         self.keyword_prompt_due = False
+        
 
         self.watchlist = None
         

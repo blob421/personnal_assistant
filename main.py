@@ -47,9 +47,11 @@ async def init():
  
     vocal_handler = Vocal_Handler(is_windows_os, keywords)
     email_controller = Email_Main_Controller(config.CONFIRMED_PROVIDERS)
-    Async_Worker = MainController(email_controller, vocal_handler, device_controller, resource_controller)
     movie_controller = Movie_Controller()
-    await movie_controller.init_best_movies()
+    Async_Worker = MainController(email_controller, vocal_handler, device_controller, 
+                                  resource_controller, movie_controller)
+    
+    
 
 ######################################## LOOPS ############################################
 
@@ -76,7 +78,7 @@ async def proximity_loop():
 
 
 async def GUI_loop():
-    
+    global movie_controller
     app = QApplication([])
 
     window = MainWindow(config.OPTIONS, vocal_handler)
@@ -84,7 +86,7 @@ async def GUI_loop():
     Async_Worker.gui = window
     window.show()
     window.show_screen('watch list')
-
+    Async_Worker.movie_controller.gui = window
     window.screens['home'].prompt_history.history_list.get_events()
     window.screens['movie'].movie_controller = movie_controller
     window.screens['movie'].init_movies()
@@ -107,6 +109,13 @@ def agentThread():
 #****************** MAIN **********************************************************
 
 async def agentAsync():
+    
+    global ASYNC_LOOP
+    ASYNC_LOOP = asyncio.get_running_loop()
+    Async_Worker.movie_controller.loop = ASYNC_LOOP
+   
+    await Async_Worker.movie_controller.init_best_movies()
+
     await asyncio.sleep(4)
     while True:
         await Async_Worker.process_mail()
@@ -118,7 +127,7 @@ async def main():
   
 
     await init()
-    mta_thread = threading.Thread(target=MTA_thread, daemon=True).start()
+    mta_thread = threading.Thread(target= MTA_thread, daemon=True).start()
     threading.Thread(target=agentThread, daemon=True).start()
     await GUI_loop()
     
