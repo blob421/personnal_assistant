@@ -1,8 +1,32 @@
 from utilities.db.async_calls import with_sqlite3
+from utilities.db.sync_calls import with_sqlite3_sync
 
 
 
+@with_sqlite3_sync
+def not_interested_movie(cur, id , value, err_str='Error marking movie as not interested'):
+    cur.execute("""UPDATE movies SET interested=? WHERE imdbId=?""", [value, id])
+
+@with_sqlite3
+async def match_movie_term(cur, word, err_str='Error while matching movie term word'):
     
+    await cur.execute("""SELECT * FROM movie_terms WHERE term MATCH ?""", [word + '*'])
+    result = await cur.fetchone()
+    if result:
+        print(word)
+        print(result)
+        return result 
+    
+    return None
+
+@with_sqlite3_sync
+def mark_seen(cur, id, err_str='Error marking the movie as seen'):
+    cur.execute("""UPDATE movies SET seen=? WHERE imdbId=?""", [True, id])  
+
+@with_sqlite3_sync
+def like_movie(cur, id, value, err_str='Error marking the movie as seen'):
+    cur.execute("""UPDATE movies SET liked=? WHERE imdbId=?""", [value, id])  
+
 @with_sqlite3
 async def get_unseen_movies(cur, err_str='Error fetching movies from db'):
     await cur.execute("""SELECT * FROM movies WHERE seen=? AND interested=? LIMIT 80""", 
@@ -20,9 +44,21 @@ async def get_movies_by_id(cur, ids, err_str='Error fetching movies by id'):
      
         await cur.execute("""SELECT * FROM movies WHERE imdbId=?""", [i])
         r = await cur.fetchone()
-        movies.append({'title': r[1], 'year': r[2], 'imdbId': r[3], 'poster': r[4], 'plot': r[5] })
+        movies.append({'title': r[1], 'year': r[2], 'imdbId': r[3], 'poster': r[4], 
+                       'plot': r[5] , 'seen': r[7], 'liked': r[8], 'interested': r[9]})
     if movies:
         return movies
+    
+@with_sqlite3_sync
+def get_movie_by_id(cur, id, err_str='Error fetching movies by id'):
+ 
+    cur.execute("""SELECT * FROM movies WHERE imdbId=?""", [id])
+    r = cur.fetchone()
+    movie = {'title': r[1], 'year': r[2], 'imdbId': r[3], 'poster': r[4], 
+                       'plot': r[5] , 'seen': r[7], 'liked': r[8], 'interested': r[9]}
+    if movie:
+        return movie
+    return None
 
 
 @with_sqlite3
@@ -66,17 +102,17 @@ async def save_movie(cur, movie:dict, err_str='Err saving movies'):
                                             [title, year, genres, poster, plot, imdbId])
 
         
-@with_sqlite3
-async def save_liked_movie_terms(cur, terms, err_str='Error saving plot terms for liked movie'):
+@with_sqlite3_sync
+def save_liked_movie_terms(cur, terms, err_str='Error saving plot terms for liked movie'):
     for t in terms:
         term = t[:6]
 
-        await cur.execute("""UPDATE movie_terms SET score = score + 1 WHERE term MATCH ?""", [term + '*'])
+        cur.execute("""UPDATE movie_terms SET score = score + 1 WHERE term MATCH ?""", [term + '*'])
         exists = cur.rowcount == 1
      
         if not exists:
       
-            await cur.execute("""INSERT OR IGNORE INTO movie_terms VALUES (?,?)""", [t, 1])
+           cur.execute("""INSERT OR IGNORE INTO movie_terms VALUES (?,?)""", [t, 1])
        
 
 

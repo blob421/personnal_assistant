@@ -294,6 +294,32 @@ styles = {
              #movie_box {
              background-color: blue;
              }
+             #next_btn {
+             font-size: 26px;
+             }
+
+             #movie_side_btns {
+             font-size: 26px; margin-bottom:12px;
+             }
+             #not_interested {
+             background-color:salmon;font-size: 25px;
+             }
+             #liked {
+               background-color:lightblue;
+             }
+
+             #movie_content {
+             font-size: 22px;
+             }
+
+             #movie_title {
+             font-size: 28px; background-color: #292929; padding-left:20px;
+             font-weight: bold;
+             }
+             #movie_plot {
+             font-size: 25px; border: 1px solid grey; background-color: black;
+             color: white; padding:20px;
+             }
 
 
           """

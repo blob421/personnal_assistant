@@ -10,6 +10,9 @@ CONFIRMED_PROVIDERS = ['Google']
 
 PROCESS_NAME = 'python.exe'
 
+POSTERS_PATH =  os.path.join(
+                        os.path.dirname(__file__), 'GUI', 'assets', 'posters')
+
 
 default_options = {
                    'op_h_start': '09:00',

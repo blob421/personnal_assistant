@@ -10,5 +10,6 @@ async def main():
     controller = Movie_Controller()
     await controller.init_best_movies()
     print(controller.best_movies)
+   # await controller.like_movie('tt31728330')
 
 asyncio.run(main())

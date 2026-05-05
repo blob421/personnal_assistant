@@ -28,9 +28,11 @@ async def are_keywords_in_messages(messages:list, keywords:list):
 
 def extract_nouns(text):
     doc = nlp(text)
-    return set(token.text for token in doc if token.pos_ in ("NOUN", "PROPN"))
+    return set(token.text.replace("'", "") for token in doc if token.pos_ in ("NOUN", "PROPN"))
 
-
+def prefix(word):
+  
+    return word[:min(len(word), 6)]
 
 
 def extract_gmail_msgid(msg_data):

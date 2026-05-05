@@ -1,12 +1,16 @@
 
 from controllers.movies.movie_client import Movie_Client
 from controllers.movies.db_calls import (save_movie, get_unseen_movies, get_liked_terms, 
-                                         save_liked_movie_terms, get_movies_by_id)
+                                         save_liked_movie_terms, get_movies_by_id, 
+                                         get_movie_by_id,
+                                         match_movie_term, mark_seen)
 import random
-from utilities.functions.functions import extract_nouns
+from utilities.functions.functions import extract_nouns, prefix
 from utilities.db.async_calls import get_logged_events, save_event
 import json
 from datetime import datetime, timedelta
+import os
+import config
 
 
 class Movie_Controller():
@@ -26,6 +30,17 @@ class Movie_Controller():
         await self.select_best_movies()
         
                
+    async def save_posters(self):
+        await self.client.create_session()
+  
+        for p in self.best_movies:
+       
+            async with self.client.session.get(p['poster']) as r:
+                data = await r.read()
+                with open(os.path.join(config.POSTERS_PATH, f'{p['imdbId']}.jpg'), 'wb') as pic:
+                    pic.write(data)
+
+        await self.client.terminate_session()
 
 
     async def fetch_movies(self, pages=1):
@@ -38,17 +53,26 @@ class Movie_Controller():
 
         await self.client.terminate_session()
 
+    #### DO TRIGRAM SEARCH INSTEAD WITH prefix function faster
 
     async def select_best_movies(self):
         movies:dict = await get_unseen_movies()
-        liked_terms:list = await get_liked_terms()
 
         scored_movies = {}
-        for t in liked_terms:
-            short_term = t['term'][:6]
-            for id, m in movies.items():
-                if short_term in m['title'] or short_term in m['plot']:
-                    scored_movies[id] = scored_movies.get(id, 0) + t['score']
+     
+        for id, m in movies.items():
+         
+
+            title_nouns:set = extract_nouns(m['title'].lower())
+            plot_nouns:set = extract_nouns(m['plot'].lower())
+            for w in plot_nouns.union(title_nouns):
+                if len(w) < 5: continue
+                w = prefix(w)
+
+                match = await match_movie_term(w)
+                if match:
+                    scored_movies[id] = scored_movies.get(id, 0) + match[1]
+           
 
         print(scored_movies)
         best = []
@@ -58,25 +82,27 @@ class Movie_Controller():
 
                 best_recommendation = max(scored_movies, key=scored_movies.get)
                 best.append(best_recommendation)
+                scored_movies.pop(best_recommendation)
 
         else:
             best = random.sample(list(movies.keys()), 3)
 
         self.best_movies = await get_movies_by_id(best)
+        await self.save_posters()
         await save_event('Movie update', json.dumps([i for i in best]))
            
-        
-
-        
-
-
-    async def like_movie(self, movie_id):
-        for m in self.best_movies:
-            if m['id'] == movie_id:
-                nouns_title:set = extract_nouns(m['title'].lower())
-                nouns = nouns_title.union(extract_nouns(m['plot'].lower()))
+ 
+    def like_movie(self, movie_id):
+        m = get_movie_by_id(movie_id)
+       
+        nouns_title:set = extract_nouns(m['title'].lower())
+        nouns = nouns_title.union(extract_nouns(m['plot'].lower()))
                 
-                await save_liked_movie_terms(nouns)
+        save_liked_movie_terms(nouns)
+
+    async def mark_seen(self, movie_id):
+        await mark_seen(movie_id)
+
 
         
         

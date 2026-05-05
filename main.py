@@ -10,6 +10,7 @@ from controllers.bluetooth.controller import Device_Controller
 from controllers.ressource_controller.controller import Ressource_Controller
 from controllers.Sound.vocal_interactions import Vocal_Handler
 from controllers.main_controller import MainController
+from controllers.movies.movie_controller import Movie_Controller
 
 from utilities.db.async_calls import (load_keywords, load_options)
 from utilities.db.init_tables import init_db
@@ -32,7 +33,7 @@ is_windows_os = sys.platform.startswith("win")
 
 async def init():
     
-    global resource_controller, vocal_handler, device_controller, Async_Worker
+    global resource_controller, vocal_handler, device_controller, Async_Worker, movie_controller
 
 
     await init_db()
@@ -47,7 +48,8 @@ async def init():
     vocal_handler = Vocal_Handler(is_windows_os, keywords)
     email_controller = Email_Main_Controller(config.CONFIRMED_PROVIDERS)
     Async_Worker = MainController(email_controller, vocal_handler, device_controller, resource_controller)
-
+    movie_controller = Movie_Controller()
+    await movie_controller.init_best_movies()
 
 ######################################## LOOPS ############################################
 
@@ -74,7 +76,7 @@ async def proximity_loop():
 
 
 async def GUI_loop():
-  
+    
     app = QApplication([])
 
     window = MainWindow(config.OPTIONS, vocal_handler)
@@ -84,6 +86,8 @@ async def GUI_loop():
     window.show_screen('watch list')
 
     window.screens['home'].prompt_history.history_list.get_events()
+    window.screens['movie'].movie_controller = movie_controller
+    window.screens['movie'].init_movies()
     app.exec()
 
 #******************* THREADS ******************************************************
