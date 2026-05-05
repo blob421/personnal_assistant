@@ -5,7 +5,7 @@ from PyQt6.QtCore import Qt
 from GUI.styles import styles
 import config
 import os 
-from controllers.movies.db_calls import not_interested_movie, like_movie
+
 
 
 
@@ -25,6 +25,7 @@ class MovieScreen(QWidget):
         layout.addWidget(self.MovieBox, 9)
 
     def init_movies(self):
+        self.MovieBox.movies = []
         self.suggestions = self.movie_controller.best_movies
       
         for idx, m in enumerate(self.suggestions):

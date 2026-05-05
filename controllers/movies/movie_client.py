@@ -33,6 +33,7 @@ class Movie_Client():
         self.suggested = []
         self.fill_up_due = False
         self.session = None
+        self.n_of_ids_fetched = 0
       
 
     async def create_session(self):
@@ -50,18 +51,17 @@ class Movie_Client():
                     return await response.json()
                 return None
 
-    async def get_ids(self, amount_pages, genres):
+    async def get_ids(self, genres):
         codes = [TMDB_CODES[g] for g in genres]
         codestring = '|'.join([str(c) for c in codes])
-    
-        page = 1 
-        while page < amount_pages + 1:
-            tmdb_string = f"https://api.themoviedb.org/3/discover/movie?with_genres={codestring}&page={page}"
+        page = 1
+        while self.n_of_ids_fetched < 100:
+            tmdb_string = f"""https://api.themoviedb.org/3/discover/movie?
+                                                    with_genres={codestring}&page={page}&sort_by=random"""
             results = await self.fetch_with_session(tmdb_string, tmdb_creds)
-
+            
             if not results or not results['results']:
                 break
-
             page += 1
             yield results['results']
 
@@ -75,8 +75,9 @@ class Movie_Client():
             for r in results:
                 id = r['imdb_id']
                 if id :
-                    saved = await save_imdb_id(id)
-                    if saved:
+                    inserted = await save_imdb_id(id)
+                    if inserted:
+                       self.n_of_ids_fetched += 1
                        yield id
                         
             
@@ -97,11 +98,11 @@ class Movie_Client():
               
 
 
-    async def make_imdbId_generator(self ,pages=1, genres=None):
+    async def make_imdbId_generator(self, genres=None):
         return (
                 self.get_movie_data(
                     self.handle_imdb_id(
-                        self.get_ids(pages, genres)
+                        self.get_ids(genres)
                         )
                   
                     )

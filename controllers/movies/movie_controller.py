@@ -3,7 +3,7 @@ from controllers.movies.movie_client import Movie_Client
 from controllers.movies.db_calls import (save_movie, get_unseen_movies, 
                                          save_liked_movie_terms, get_movies_by_id, like_movie,
                                          not_interested_movie,descore_terms,
-                                         match_movie_term, mark_seen)
+                                         match_movie_term, mark_seen, movie_fillup_due)
 import random
 from utilities.functions.functions import extract_nouns, prefix
 from utilities.db.async_calls import get_logged_events, save_event
@@ -63,6 +63,11 @@ class Movie_Controller():
                 await self.client.terminate_session()
         return wrapper
 
+    async def movie_fillup_due(self):
+        due = await movie_fillup_due()
+        if due:
+            await self.fetch_movies()
+
 
     async def init_best_movies(self):
         last_event = await get_logged_events("'Movie update'", limit=1)
@@ -88,11 +93,12 @@ class Movie_Controller():
 
 
     @client_needed
-    async def fetch_movies(self, pages=1):
-        generator = await self.client.make_imdbId_generator(pages, 
-                                                        genres=['horror', 'crime', 'sci-fi'])
+    async def fetch_movies(self):
+        generator = await self.client.make_imdbId_generator(genres=['horror', 'crime', 'sci-fi'])
         async for movie in generator:
             await save_movie(movie)
+            
+        self.client.n_of_ids_fetched = 0
 
 
 
@@ -169,7 +175,7 @@ class Movie_Controller():
             nouns_title:set = extract_nouns(m['title'].lower())
             nouns = nouns_title.union(extract_nouns(m['plot'].lower()))
             await descore_terms(terms=nouns)
-            
+
         await not_interested_movie(id=movie_id, value=new_value)
 
 

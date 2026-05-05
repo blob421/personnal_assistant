@@ -58,7 +58,7 @@ async def get_movies_by_id(cur, ids, err_str='Error fetching movies by id'):
 
 @with_sqlite3
 async def movie_fillup_due(cur , err_str ='Error fetching last movie event'):
-    await cur.execute("""SELECT COUNT(*) FROM movies WHERE seen=?""", [False])
+    await cur.execute("""SELECT COUNT(*) FROM movies WHERE seen=? AND interested=?""", [False, True])
     result = await cur.fetchone()
     count = result[0] if result else 0
 
@@ -71,18 +71,24 @@ async def movie_fillup_due(cur , err_str ='Error fetching last movie event'):
 @with_sqlite3
 async def save_imdb_id(cur, id, err_str='Error saving imdb ids'):
     await cur.execute("""INSERT OR IGNORE INTO movies (imdbId) VALUES(?)""", [id])
+    if cur.rowcount == 1:
+        return 1
+    
+    return 0
 
-    return cur.rowcount == 1
 
 @with_sqlite3
 async def save_movie(cur, movie:dict, err_str='Err saving movies'):
   
-    imdbId= movie['imdbID'] or None
-    title = movie["Title"] or None
-    year = movie["Year"] or None
-    plot = movie['Plot'] or None
-    genres = movie['Genre'] or None
-    poster = movie['Poster'] or None
+    imdbId= movie.get('imdbID', None) 
+    title = movie.get('Title', None)
+    year = movie.get("Year", None)
+    plot = movie.get("Plot", None)
+    genres = movie.get("Genre", None)
+    poster = movie.get("Poster", None)
+    
+    if not title or not imdbId or not plot or not poster:
+        return
 
     await cur.execute("""UPDATE movies SET title=?, year=?, genres=?, poster=?, plot=? 
                          WHERE imdbId=?""",

@@ -44,7 +44,7 @@ async def init_db(cur, err_str='Error creating tables during init'):
     await cur.execute("""CREATE TABLE IF NOT EXISTS movies(id INTEGER PRIMARY KEY,
                                                             title VARCHAR(60),
                                                             year VARCHAR(10),
-                                                            imdbId VARCHAR(20),
+                                                            imdbId VARCHAR(20) UNIQUE,
                                                             poster TEXT,
                                                             plot TEXT,
                                                             genres VARCHAR(60),

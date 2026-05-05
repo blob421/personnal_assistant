@@ -17,6 +17,10 @@ import os
 icon_path = os.path.join(os.path.dirname(__file__), 'assets', 'logo.png')
 from PyQt6.QtGui import QIcon, QAction
 
+class Movie_Refresh_Worker(QObject):
+    reload_requested = pyqtSignal()
+    def __init__(self):
+        super().__init__()
 
 class Worker(QObject):
     reload_requested = pyqtSignal()
@@ -97,6 +101,8 @@ class MainWindow(QMainWindow):
 
         self.setCentralWidget(widget)
         self.worker = Worker()
+        self.movie_worker = Movie_Refresh_Worker()
+        self.movie_worker.reload_requested.connect(self.screens['movie'].init_movies)
         self.worker.reload_requested.connect(self.screens['home'].prompt_history.history_list.get_events)
         self.watchlist_worker = Watchlist_Worker()
         self.watchlist_worker.reload_requested.connect(self.screens['watch list'].below.left_cont.bottom.load_messages)

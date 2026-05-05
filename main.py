@@ -89,7 +89,7 @@ async def GUI_loop():
     Async_Worker.movie_controller.gui = window
     window.screens['home'].prompt_history.history_list.get_events()
     window.screens['movie'].movie_controller = movie_controller
-    window.screens['movie'].init_movies()
+
     app.exec()
 
 #******************* THREADS ******************************************************
@@ -108,27 +108,33 @@ def agentThread():
 
 #****************** MAIN **********************************************************
 
-async def agentAsync():
-    
-    global ASYNC_LOOP
-    ASYNC_LOOP = asyncio.get_running_loop()
-    Async_Worker.movie_controller.loop = ASYNC_LOOP
-   
-    await Async_Worker.movie_controller.init_best_movies()
 
+async def mail_loop():
     await asyncio.sleep(4)
     while True:
         await Async_Worker.process_mail()
         await asyncio.sleep(1800)
 
+async def movies_loop():
+  
+    ASYNC_LOOP = asyncio.get_running_loop()
+    Async_Worker.movie_controller.loop = ASYNC_LOOP
+    while True:
+        await Async_Worker.movie_controller.movie_fillup_due()
+        await Async_Worker.movie_controller.init_best_movies()
+        Async_Worker.movie_controller.gui.movie_worker.reload_requested.emit()
+        await asyncio.sleep(24 * 3600)
+
+async def agentAsync():
+    await asyncio.gather(mail_loop(), movies_loop())
 
 
 async def main():
   
-
     await init()
     mta_thread = threading.Thread(target= MTA_thread, daemon=True).start()
     threading.Thread(target=agentThread, daemon=True).start()
+  
     await GUI_loop()
     
 
