@@ -86,9 +86,14 @@ class Email_Main_Controller():
         emails = []
         for i in msg_ids:
             id = i.decode()
-        
-            _ , msg_data = await imap.fetch(id, '(X-GM-MSGID BODY.PEEK[])')
-        
+
+            try:
+                _ , msg_data = await imap.fetch(id, '(X-GM-MSGID BODY.PEEK[])')
+
+            except aioimaplib.aioimaplib.CommandTimeout:
+                logger.warning('encountered a timemout while fetching mail')
+                continue
+
             raw = msg_data[1]
             X_GM_ID = extract_gmail_msgid(msg_data)
 

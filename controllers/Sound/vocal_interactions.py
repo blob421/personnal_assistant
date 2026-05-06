@@ -80,6 +80,8 @@ class Vocal_Handler():
             self.prompt_active = False
             return nouns, terms_string, True
         
+        return None, None , False
+        
     
     async def process_pending_events(self, messages:dict):
     

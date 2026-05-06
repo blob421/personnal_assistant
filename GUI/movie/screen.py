@@ -1,13 +1,13 @@
 from PyQt6.QtWidgets import QWidget, QVBoxLayout, QLabel, QHBoxLayout, QPushButton, QSizePolicy
-from PyQt6.QtGui import QPixmap
+from PyQt6.QtGui import QPixmap, QIcon
 from GUI.titles import Title
-from PyQt6.QtCore import Qt
+from PyQt6.QtCore import Qt, QSize
 from GUI.styles import styles
 import config
 import os 
 
 
-
+dice_icon = os.path.abspath(os.path.join(os.path.dirname(__file__), '../', 'assets', 'dice.png'))
 
 class MovieScreen(QWidget):
     def __init__(self):
@@ -105,7 +105,16 @@ class Title_plot(QWidget):
         self.layout.addWidget(title_label)
         self.layout.addWidget(plot_label)
 
-
+class ScrambleButton(QPushButton):
+    def __init__(self):
+        super().__init__()
+        self.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.setText('Scramble ')
+        self.setIcon(QIcon(dice_icon))
+        
+        self.setIconSize(QSize(45, 45))
+        self.setLayoutDirection(Qt.LayoutDirection.RightToLeft)
+       
 
 class Movie_Buttons_Widget(QWidget):
     def __init__(self, parent):
@@ -124,7 +133,7 @@ class Movie_Buttons_Widget(QWidget):
         self.layout.addWidget(self.like_btn)
         self.layout.addWidget(self.seen_btn)
         self.layout.addWidget(self.not_interested)
-        self.scramble = QPushButton('Scramble')
+        self.scramble = ScrambleButton()
         self.scramble.setObjectName('scramble')
         self.scramble.clicked.connect(self.parent.parent.master.movie_controller.signals_worker.scramble.emit)
         self.layout.addWidget(self.scramble, alignment=Qt.AlignmentFlag.AlignBottom)
@@ -203,6 +212,7 @@ class Movie_Button(QPushButton):
     def __init__(self, type, movie_item, buttons_widget):
         super().__init__()
         self.type = type
+        self.setCursor(Qt.CursorShape.PointingHandCursor)
         self.movie_item = movie_item
         self.setFixedWidth(200)
         self.imdbId = movie_item.movie['imdbId']

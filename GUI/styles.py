@@ -300,18 +300,26 @@ styles = {
 
              #movie_side_btns {
              font-size: 26px; margin-bottom:12px;
+              padding:5px;
              }
              #not_interested {
              background-color:salmon;font-size: 25px; color: black;
+              padding:5px;
              }
              #liked {
                background-color:lightblue; font-size: 25px; margin-bottom:12px; color: black;
+                padding:5px;
              }
              #seen {
               background-color: lightgreen; font-size: 25px; margin-bottom:12px; color: black;
+              padding:5px;
              }
              #scramble {
-              font-size: 29px;
+              font-size: 28px; padding:11px; border-radius:7px; background-color:#2e2e2e; 
+              border:1px solid black;
+             }
+             #scramble::hover {
+               background-color:#3a3a3b;
              }
              #movie_content {
              font-size: 22px;
