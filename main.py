@@ -89,7 +89,8 @@ async def GUI_loop():
     Async_Worker.movie_controller.gui = window
     window.screens['home'].prompt_history.history_list.get_events()
     window.screens['movie'].movie_controller = movie_controller
-    Async_Worker.movie_controller.gui.movie_worker.reload_requested.emit()
+    
+    
 
     app.exec()
 
@@ -120,11 +121,16 @@ async def movies_loop():
   
     ASYNC_LOOP = asyncio.get_running_loop()
     Async_Worker.movie_controller.loop = ASYNC_LOOP
+    await Async_Worker.movie_controller.movie_fillup_due()
+    await Async_Worker.movie_controller.init_best_movies()
+    await asyncio.sleep(5)
+    Async_Worker.movie_controller.gui.movie_worker.reload_requested.emit()
     while True:
+        await asyncio.sleep(24 * 3600)
         await Async_Worker.movie_controller.movie_fillup_due()
         await Async_Worker.movie_controller.init_best_movies()
         
-        await asyncio.sleep(24 * 3600)
+        
 
 async def agentAsync():
     await asyncio.gather(mail_loop(), movies_loop())
@@ -137,6 +143,7 @@ async def main():
     threading.Thread(target=agentThread, daemon=True).start()
   
     await GUI_loop()
+ 
     
 
 

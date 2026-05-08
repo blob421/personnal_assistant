@@ -108,14 +108,13 @@ class Movie_Controller():
 
 
     async def select_best_movies(self):
-        movies:dict = await get_unseen_movies()
-        print(movies)
 
+        movies:dict = await get_unseen_movies()
         scored_movies = {}
-     
+      
         for id, m in movies.items():
          
-            if not m.get('title') or not m.get('plot'):
+            if not m.get('title') or not m.get('plot') or not m.get('poster'):
                 continue
             title_nouns:set = extract_nouns(m['title'].lower())
             plot_nouns:set = extract_nouns(m['plot'].lower())
@@ -129,10 +128,7 @@ class Movie_Controller():
               
            
 
-        print(scored_movies)
         best = []
-        print('Went here')
-
         if scored_movies:
             for i in range(3):
 
@@ -145,12 +141,14 @@ class Movie_Controller():
 
         for m in self.best_movies:
             id = m['imdbId']
+       
             os.remove(os.path.join(config.POSTERS_PATH, f'{id}.jpg'))
             
         self.best_movies = await get_movies_by_id(best)
         await self.save_posters()
         await save_event('Movie update', json.dumps([i for i in best]))
         self.gui.movie_worker.reload_requested.emit()
+        
 
 
     ############################# GUI BUTTONS #######################################

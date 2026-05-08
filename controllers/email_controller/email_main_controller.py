@@ -107,8 +107,12 @@ class Email_Main_Controller():
                                                             'id':X_GM_ID})
                 
                 # imap.store(msg_id, '+FLAGS', '\\Seen') Mark then as seen
+        try:
+            await imap.logout()
 
-        await imap.logout()
+        except TimeoutError as e:
+            logger.warning(f'Imap logout Timeout Error : {e}')
+            pass
 
         if len(emails) > 0:
             return emails
