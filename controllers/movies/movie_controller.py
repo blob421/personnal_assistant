@@ -88,11 +88,15 @@ class Movie_Controller():
     async def save_posters(self):
 
         for p in self.best_movies:
-       
-            async with self.client.session.get(p['poster']) as r:
-                data = await r.read()
-                with open(os.path.join(config.POSTERS_PATH, f'{p['imdbId']}.jpg'), 'wb') as pic:
-                    pic.write(data)
+            try:
+                async with self.client.session.get(p['poster']) as r:
+                    data = await r.read()
+                    with open(os.path.join(config.POSTERS_PATH, f'{p['imdbId']}.jpg'), 'wb') as pic:
+                        pic.write(data)
+
+            except Exception as e:
+                print(f'Error saving a movie poster: {e}')
+                print('Restarting movie selection and deleting poster from the database')
 
 
 
@@ -114,7 +118,7 @@ class Movie_Controller():
       
         for id, m in movies.items():
          
-            if not m.get('title') or not m.get('plot') or not m.get('poster'):
+            if not m.get('title') or not m.get('plot'):
                 continue
             title_nouns:set = extract_nouns(m['title'].lower())
             plot_nouns:set = extract_nouns(m['plot'].lower())
@@ -139,10 +143,11 @@ class Movie_Controller():
         else:
             best = random.sample(list(movies.keys()), 3)
 
-        for m in self.best_movies:
-            id = m['imdbId']
-       
-            os.remove(os.path.join(config.POSTERS_PATH, f'{id}.jpg'))
+        if self.best_movies:
+            for m in self.best_movies:
+                id = m['imdbId']
+        
+                os.remove(os.path.join(config.POSTERS_PATH, f'{id}.jpg'))
             
         self.best_movies = await get_movies_by_id(best)
         await self.save_posters()

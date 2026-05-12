@@ -30,6 +30,9 @@ def extract_nouns(text):
     doc = nlp(text)
     return set(token.text.replace("'", "") for token in doc if token.pos_ in ("NOUN", "PROPN"))
 
+def extract_nouns_no_proper(text):
+    doc = nlp(text)
+    return set(token.text.replace("'", "") for token in doc if token.pos_ == "NOUN" and token.pos_ != "PROPN")
 def prefix(word):
   
     return word[:min(len(word), 6)]

@@ -34,7 +34,7 @@ async def like_movie(cur, id, value, err_str='Error marking the movie as seen'):
 
 @with_sqlite3
 async def get_unseen_movies(cur, err_str='Error fetching movies from db'):
-    await cur.execute("""SELECT * FROM movies WHERE seen=? AND interested=? LIMIT 80""", 
+    await cur.execute("""SELECT * FROM movies WHERE seen=? AND interested=? AND poster != 'N/A' AND poster IS NOT NULL LIMIT 80""", 
                                                                            [False, True])
     
     results = await cur.fetchall()
