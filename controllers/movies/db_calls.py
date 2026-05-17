@@ -1,5 +1,5 @@
 from utilities.db.async_calls import with_sqlite3
-
+import json
 
 
 
@@ -34,7 +34,28 @@ async def like_movie(cur, id, value, err_str='Error marking the movie as seen'):
 
 @with_sqlite3
 async def get_unseen_movies(cur, err_str='Error fetching movies from db'):
-    await cur.execute("""SELECT * FROM movies WHERE seen=? AND interested=? AND poster != 'N/A' AND poster IS NOT NULL LIMIT 80""", 
+   
+  
+    await cur.execute("""SELECT * FROM events WHERE type='Movie update' ORDER BY id DESC LIMIT 5""")
+    results = await cur.fetchall()
+    
+    exclusions = ''
+    if results:
+        for idx, result in enumerate(results):
+            if idx != 0:
+               exclusions += ','
+            exclusions += ",".join(map(lambda r: f"'{r}'",json.loads(result[3])))
+            
+
+    exclusions_str = f" AND imdbId NOT IN ({exclusions})" if results else ''
+  
+    print(exclusions)
+
+
+
+    await cur.execute(f"""SELECT * FROM movies WHERE seen=? AND interested=? 
+                                                            AND poster != 'N/A' 
+                                                            AND poster IS NOT NULL{exclusions_str} LIMIT 80""", 
                                                                            [False, True])
     
     results = await cur.fetchall()

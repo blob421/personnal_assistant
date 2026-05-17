@@ -14,6 +14,8 @@ import config
 from PyQt6.QtCore import pyqtSignal, QObject
 import asyncio
 
+
+
 class Movie_Signals(QObject):
     liked = pyqtSignal()
     seen = pyqtSignal()
@@ -78,11 +80,11 @@ class Movie_Controller():
             time = datetime.fromisoformat(last_event[1])
             if not datetime.now() - time > timedelta(days=1):
                 self.best_movies = await get_movies_by_id(json.loads(last_event[3]))
-                
+      
                 return
         
         await self.select_best_movies()
-        
+    
 
     @client_needed
     async def save_posters(self):
