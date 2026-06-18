@@ -8,6 +8,7 @@ async def init_db(cur, err_str='Error creating tables during init'):
                                                             term TEXT UNIQUE
                             
         )""")
+    
     await cur.execute("""CREATE TABLE IF NOT EXISTS emails(id BIGINT UNIQUE, date TEXT, subject TEXT, tags TEXT, sender TEXT)""")
     await cur.execute("""CREATE INDEX IF NOT EXISTS emails_id_idx on emails(id)""")
     await cur.execute("""CREATE INDEX IF NOT EXISTS emails_tags_idx on emails(tags)""")
@@ -53,6 +54,10 @@ async def init_db(cur, err_str='Error creating tables during init'):
                                                             interested BOOLEAN DEFAULT true
 
                       )""")
+    
+    await cur.execute("""CREATE TABLE IF NOT EXISTS movie_genres_score(id INTEGER PRIMARY KEY,
+                                                                       name VARCHAR(20) UNIQUE,
+                                                                       score INTEGER DEFAULT 0)""")
     
     await cur.execute("""CREATE INDEX IF NOT EXISTS movie_seen_idx on movies(seen)""")
     await cur.execute("""CREATE INDEX IF NOT EXISTS movie_imdbId_idx on movies(imdbId)""")

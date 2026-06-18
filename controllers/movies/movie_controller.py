@@ -3,7 +3,8 @@ from controllers.movies.movie_client import Movie_Client
 from controllers.movies.db_calls import (save_movie, get_unseen_movies, 
                                          save_liked_movie_terms, get_movies_by_id, like_movie,
                                          not_interested_movie,descore_terms,
-                                         match_movie_term, mark_seen, movie_fillup_due)
+                                         match_movie_term, mark_seen, movie_fillup_due,
+                                         get_genre_score, save_genre_score)
 import random
 from utilities.functions.functions import extract_nouns, prefix
 from utilities.db.async_calls import get_logged_events, save_event
@@ -117,11 +118,16 @@ class Movie_Controller():
 
         movies:dict = await get_unseen_movies()
         scored_movies = {}
-      
+  
         for id, m in movies.items():
+            
          
             if not m.get('title') or not m.get('plot'):
+          
                 continue
+
+            scored_movies[id] = scored_movies.get(id, 0)
+
             title_nouns:set = extract_nouns(m['title'].lower())
             plot_nouns:set = extract_nouns(m['plot'].lower())
             for w in plot_nouns.union(title_nouns):
@@ -130,10 +136,18 @@ class Movie_Controller():
 
                 match = await match_movie_term(w)
                 if match:
-                    scored_movies[id] = scored_movies.get(id, 0) + match[1]
-              
-           
+                    scored_movies[id] += match[1]
+            
 
+            
+            genres = m.get('genres').split(',')
+          
+            for genre in genres:
+                score = await get_genre_score(genre=genre.strip())
+                if score:
+                    scored_movies[id] += score
+
+      
         best = []
         if scored_movies:
             for i in range(3):
@@ -144,6 +158,7 @@ class Movie_Controller():
 
         else:
             best = random.sample(list(movies.keys()), 3)
+    
 
         if self.best_movies:
             for m in self.best_movies:
@@ -153,7 +168,7 @@ class Movie_Controller():
             
         self.best_movies = await get_movies_by_id(best)
         await self.save_posters()
-        await save_event('Movie update', json.dumps([i for i in best]))
+        await save_event(type='Movie update', message=json.dumps([i for i in best]))
         self.gui.movie_worker.reload_requested.emit()
         
 
@@ -167,7 +182,10 @@ class Movie_Controller():
   
         
         movie = await get_movies_by_id([movie_id])
+    
         m = movie[0]
+        await handle_genres_score(m, new_value)
+     
  
         nouns_title:set = extract_nouns(m['title'].lower())
         nouns = nouns_title.union(extract_nouns(m['plot'].lower()))
@@ -186,10 +204,12 @@ class Movie_Controller():
 
     async def mark_interested(self):
         movie_id, new_value = self.handle_gui_data('interested')
+        movie = await get_movies_by_id([movie_id])
+        m = movie[0]
+        await handle_genres_score(m, new_value)
+
         if new_value == False:
-            movie = await get_movies_by_id([movie_id])
-            m = movie[0]
- 
+
             nouns_title:set = extract_nouns(m['title'].lower())
             nouns = nouns_title.union(extract_nouns(m['plot'].lower()))
             await descore_terms(terms=nouns)
@@ -211,7 +231,12 @@ class Movie_Controller():
 
         
         
+async def handle_genres_score(movie:object, liked=False):
 
+    genres = movie.get('genres').split(',')
+    for genre in genres:
+         await save_genre_score(genre=genre.strip(), liked=liked)
+       
 
 
 

@@ -31,6 +31,27 @@ async def like_movie(cur, id, value, err_str='Error marking the movie as seen'):
     await cur.execute("""UPDATE movies SET liked=? WHERE imdbId=?""", [value, id])  
 
 
+@with_sqlite3
+async def get_genre_score(cur, genre:str, err_str='Error getting genre score from db'):
+    await cur.execute('SELECT score FROM movie_genres_score WHERE name=?', (genre,))
+    result = await cur.fetchone()
+    if result:
+        return int(result[0])
+    
+    return 0
+
+@with_sqlite3
+async def save_genre_score(cur, genre:str, liked=False, err_str='Error getting genre score from db'):
+    delta = 2 if liked else -2
+
+    await cur.execute(f'UPDATE movie_genres_score SET score = score + ? WHERE name=?', (delta, genre,))
+
+    if cur.rowcount == 0:
+       await cur.execute("""INSERT OR IGNORE INTO movie_genres_score(name, score) VALUES(?,?)""", 
+                         (genre, delta,))
+    
+    return None
+
 
 @with_sqlite3
 async def get_unseen_movies(cur, err_str='Error fetching movies from db'):
@@ -49,17 +70,19 @@ async def get_unseen_movies(cur, err_str='Error fetching movies from db'):
 
     exclusions_str = f" AND imdbId NOT IN ({exclusions})" if results else ''
   
-    print(exclusions)
-
-
-
+  
     await cur.execute(f"""SELECT * FROM movies WHERE seen=? AND interested=? 
                                                             AND poster != 'N/A' 
+                                                            AND genres IS NOT NULL
+                                                            AND genres != 'N/A'
                                                             AND poster IS NOT NULL{exclusions_str} LIMIT 80""", 
                                                                            [False, True])
     
     results = await cur.fetchall()
-    return {r[3] : {'title': r[1], 'plot': r[5]} for r in results}
+    movies = {r[3] : {'title': r[1], 'plot': r[5], 'genres': r[6]} for r in results}
+
+  
+    return movies
 
 
 @with_sqlite3
@@ -70,7 +93,7 @@ async def get_movies_by_id(cur, ids, err_str='Error fetching movies by id'):
      
         await cur.execute("""SELECT * FROM movies WHERE imdbId=?""", [i])
         r = await cur.fetchone()
-        movies.append({'title': r[1], 'year': r[2], 'imdbId': r[3], 'poster': r[4], 
+        movies.append({'title': r[1], 'year': r[2], 'imdbId': r[3], 'poster': r[4], 'genres': r[6],
                        'plot': r[5] , 'seen': r[7], 'liked': r[8], 'interested': r[9]})
     if movies:
         return movies
