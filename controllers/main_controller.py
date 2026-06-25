@@ -9,7 +9,9 @@ from controllers.notifications.controller import notif_controller
 from controllers.timer.timer import Timer
 import asyncio
 from datetime import datetime, timedelta
+import logging
 
+logger = logging.getLogger(__name__)
 class MainController():
 
     def __init__(self, email_controller, vocal_handler, device_controller, resource_controller,
@@ -30,6 +32,19 @@ class MainController():
         
         self.timer.is_operating_hours()
 
+
+    @staticmethod
+    def failsafe(fn):
+        async def wrapper(self, *args, **kwargs):
+            try:
+                return fn(self, *args, **kwargs)
+            
+            except Exception as e:
+                print('Fail safe triggered in main controller')
+                logger.warning(f'Fail safe triggered : {e}')
+
+        return wrapper
+    
 
     @staticmethod     
     def proximity(fn):
@@ -59,6 +74,7 @@ class MainController():
 
 
     ##################################### MAIL #########################################################
+    @failsafe
     @proximity
     async def process_mail(self, near=False):
          
