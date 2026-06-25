@@ -37,7 +37,7 @@ class MainController():
     def failsafe(fn):
         async def wrapper(self, *args, **kwargs):
             try:
-                return fn(self, *args, **kwargs)
+                return await fn(self, *args, **kwargs)
             
             except Exception as e:
                 print('Fail safe triggered in main controller')
