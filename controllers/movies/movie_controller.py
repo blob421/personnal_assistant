@@ -132,7 +132,7 @@ class Movie_Controller():
             plot_nouns:set = extract_nouns(m['plot'].lower())
             for w in plot_nouns.union(title_nouns):
                 if len(w) < 5: continue
-                w = prefix(w)
+                w = prefix(w.strip())
 
                 match = await match_movie_term(w)
                 if match:

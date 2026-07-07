@@ -1,4 +1,5 @@
 from utilities.db.async_calls import with_sqlite3
+from utilities.functions.functions import prefix
 import json
 
 
@@ -13,8 +14,6 @@ async def match_movie_term(cur, word, err_str='Error while matching movie term w
     await cur.execute("""SELECT * FROM movie_terms WHERE term MATCH ?""", [word + '*'])
     result = await cur.fetchone()
     if result:
-        print(word)
-        print(result)
         return result 
     
     return None
@@ -141,7 +140,7 @@ async def save_movie(cur, movie:dict, err_str='Err saving movies'):
 @with_sqlite3
 async def descore_terms(cur, terms, err_str="Error descoring movie terms"):
     for t in terms:
-        term = t[:6]
+        term = prefix(t.strip())
 
         await cur.execute("""UPDATE movie_terms SET score = score - 1 WHERE term MATCH ?""", [term + '*'])
         exists = cur.rowcount == 1
@@ -153,7 +152,7 @@ async def descore_terms(cur, terms, err_str="Error descoring movie terms"):
 @with_sqlite3
 async def save_liked_movie_terms(cur, terms, err_str='Error saving plot terms for liked movie'):
     for t in terms:
-        term = t[:6]
+        term = prefix(t.strip())
 
         await cur.execute("""UPDATE movie_terms SET score = score + 1 WHERE term MATCH ?""", [term + '*'])
         exists = cur.rowcount == 1
